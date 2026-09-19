@@ -5,9 +5,13 @@
 - * **Hice:** Instalado OrbStack + trivy/gitleaks/semgrep en el Mac. Levantado
   Juice Shop y crAPI (11 contenedores, todos healthy). Montado el pipeline
   de seguridad en GitHub Actions con 3 capas y conseguido el verde.
-- * **Se rompió:** Los nombres .orb.local no resuelven (DNS) → uso localhost:3000.
-  Pipeline en rojo por una errata mía (`--erro`); el propio log decía la solución.
-  Luego rojo otra vez, pero esta con hallazgo real.
+- * **Se rompió:** - **Se rompió:**
+  - (mañana, OrbStack) Los nombres .orb.local no resuelven por DNS.
+    Uso localhost:3000 y sigo.
+  - (tarde, GitHub Actions) Pipeline en rojo por una errata mía (`--erro`).
+    El propio log decía la solución.
+  - (tarde, GitHub Actions) Pipeline en rojo otra vez, este con hallazgo
+    real de Semgrep. Los contenedores no se tocaron por la tarde.
 - * **Aprendí:** Semgrep encontró 4 fallos **en mi propio pipeline**: las acciones
   estaban fijadas a etiquetas mutables (@v4, @v2, @master). Si comprometen esa
   cuenta, mi CI ejecuta código ajeno con mis secretos delante. Arreglado fijando
