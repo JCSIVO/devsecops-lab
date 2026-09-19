@@ -26,4 +26,4 @@ jobs:
     container: semgrep/semgrep
     steps:
       - uses: actions/checkout@v4
-      - run: semgrep scan --config p/default --erro
+      - run: semgrep scan --config p/default --error
