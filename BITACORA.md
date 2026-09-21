@@ -27,7 +27,9 @@
 
 ### 2026-09-21 · ~50 min
 
--  **Hice:** Ver el primer apartado "Fundamentos de Docker", del curso "Curso de Docker: Fundamentos", impartidos por Platzi. 
+-  **Hice:** Primer apartado "Fundamentos de Docker" del curso de Platzi. 
 -  **Se rompió:** Nada.
--  **Aprendí:** Los comandos mas comunes que se emplean en Docker -> "docker --version", docker images, docker run,  docker info, docker ps" y prestar especial atención al "--help" por todas     las ayudas que nos brinda dentro de los comandos anteriormente citados,  
--  **Pendiente:** Docker info, dispone de un apartado de Security Options
+-  **Aprendí:** Los comandos básicos de Docker (`--version`, `images`, `run`,
+  `info`, `ps`) y sobre todo el reflejo del `--help`, que sirve igual para
+  trivy, semgrep, terraform y kubectl.  
+-  **Pendiente:** `docker info` tiene un apartado de Security Options.
