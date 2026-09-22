@@ -33,3 +33,12 @@
   `info`, `ps`) y sobre todo el reflejo del `--help`, que sirve igual para
   trivy, semgrep, terraform y kubectl.  
 -  **Pendiente:** `docker info` tiene un apartado de Security Options.
+
+### 2026-09-22 · ~50 min
+
+-  **Hice:** Descargar el dotnet en brew, crear la API, y el archivo "Dockerfile" 
+-  **Se rompió:** El build falló (NETSDK1045): mi SDK local es .NET 10 y el
+           contenedor traía el SDK 8. Deriva de versiones entre mi máquina
+           y el entorno de build. Arreglado alineando la imagen base.
+-  **Aprendí:** Los comandos básicos de Docker para compilar la imagen(`docker build .`, `images`, `docker build -t nombreImagen:latest .`)  y para eliminar la imagen `docker rmi -f` nombre de la imagen   
+-  **Pendiente:** Nada.  
