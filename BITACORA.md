@@ -41,4 +41,15 @@
            contenedor traía el SDK 8. Deriva de versiones entre mi máquina
            y el entorno de build. Arreglado alineando la imagen base.
 -  **Aprendí:** Los comandos básicos de Docker para compilar la imagen(`docker build .`, `images`, `docker build -t nombreImagen:latest .`)  y para eliminar la imagen `docker rmi -f` nombre de la imagen   
+-  **Pendiente:** Nada.
+
+  ### 2026-09-23 · ~40 min
+
+-  **Hice:** Ejecutar trivy image mi-api:latest, para detectar los CVE críticos y altos. 
+-  **Se rompió:** Trivy cortó al descargar su BD de vulnerabilidades (GOAWAY del  servidor). Reintenté y fue. Lección: el escáner depende de una BD externa; en un pipeline real eso hay que cachearlo.
+-  **Aprendí:** Imagen base: 40 CVE (5 low, 35 medium, 0 high, 0 critical)
+           y 1,36 GB. De ese peso, mi código son unos pocos KB; el resto
+           es SDK que nunca se ejecuta en producción.
+           Cero críticas NO es seguro: Trivy no ve mi código, ni que el
+           contenedor corre como root.  
 -  **Pendiente:** Nada.  
