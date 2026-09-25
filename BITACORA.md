@@ -52,4 +52,15 @@
            es SDK que nunca se ejecuta en producción.
            Cero críticas NO es seguro: Trivy no ve mi código, ni que el
            contenedor corre como root.  
--  **Pendiente:** Nada.  
+-  **Pendiente:** Nada.
+
+  ### 2026-09-24 · ~40 min
+
+-  **Hice:** Multi-stage build con imagen de runtime y usuario no root. 
+-  **Se rompió:** Nada. 
+-  **Aprendí:** 40 → 13 CVE y 1,36 GB → 369 MB. Las 5 bajas no se movieron:
+           son del sistema base, común a ambas. Lo que quité fue el
+           toolchain. Reducir superficie > parchear hallazgos.
+           Lo de no correr como root no lo cuenta Trivy y es lo que más
+           importa de hoy..  
+-  **Pendiente:** Nada.
