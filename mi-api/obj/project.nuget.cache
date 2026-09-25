@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "HlaohFuTqyg=",
+  "success": true,
+  "projectFilePath": "/Users/joseconejerosivo/mi-api/mi-api.csproj",
+  "expectedPackageFiles": [
+    "/Users/joseconejerosivo/.nuget/packages/microsoft.aspnetcore.openapi/10.0.12/microsoft.aspnetcore.openapi.10.0.12.nupkg.sha512",
+    "/Users/joseconejerosivo/.nuget/packages/microsoft.openapi/2.12.0/microsoft.openapi.2.12.0.nupkg.sha512"
+  ],
+  "logs": []
+}
