@@ -23,22 +23,20 @@ de 40 caracteres.
 
 ## Endurecimiento de la imagen
 
-La API se containerizó primero de la forma más simple posible: una sola
-etapa sobre la imagen del SDK. Después se reconstruyó con multi-stage build,
-imagen de runtime y usuario sin privilegios.
+| Métrica | Inicial (SDK) | Runtime Ubuntu | Runtime Alpine |
+|---|---|---|---|
+| Tamaño | 1,36 GB | 369 MB | 186 MB (−86%) |
+| Vulnerabilidades (Trivy) | 40 | 13 | 0 |
+| Usuario de ejecución | root | `app` | `app` |
 
-| Métrica | Imagen inicial | Imagen endurecida |
-|---|---|---|
-| Tamaño | 1,36 GB | 369 MB (−73%) |
-| Vulnerabilidades (Trivy) | 40 | 13 (−68%) |
-| Usuario de ejecución | root | `app` (sin privilegios) |
+Ninguna vulnerabilidad se parcheó: se eliminó lo que sobraba. Las 27 de
+severidad media del primer salto pertenecían al toolchain de compilación,
+que no tiene razón para viajar a producción. Las 13 restantes eran del
+sistema base y desaparecen al cambiar a Alpine.
 
-Las 5 vulnerabilidades de severidad baja provienen del sistema base
-(Ubuntu 24.04) y están presentes en ambas imágenes. Las 27 de severidad
-media que desaparecen pertenecían al toolchain de compilación, que no
-tiene ninguna razón para viajar a producción: un compilador dentro de un
-contenedor de producción es una herramienta más para quien logre ejecución
-de código.
-
-El cambio a usuario no privilegiado no se refleja en el recuento de Trivy,
-que analiza paquetes y dependencias, no configuración de ejecución.
+Advertencias sobre el resultado:
+- Cero hallazgos no significa seguro. Trivy analiza paquetes y dependencias,
+  no el código, la configuración ni el control de acceso. La aplicación es
+  todavía una plantilla mínima.
+- Alpine usa musl en lugar de glibc. Es una decisión con contrapartidas,
+  no una mejora sin coste.
