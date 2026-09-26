@@ -62,5 +62,27 @@
            son del sistema base, común a ambas. Lo que quité fue el
            toolchain. Reducir superficie > parchear hallazgos.
            Lo de no correr como root no lo cuenta Trivy y es lo que más
-           importa de hoy..  
+           importa de hoy.  
+-  **Pendiente:** Nada.
+
+  ### 2026-09-25 · ~30 min
+
+-  **Hice:** Comparar los CVE de los dos días anteriores y realizar una tabla de comparación en el README del proyecto. 
+-  **Se rompió:** Nada. 
+-  **Aprendí:** Crear tablas en el archivo README del proyecto. 
+-  **Pendiente:** Nada.
+
+### 2026-09-26 · ~3 h
+
+-  **Hice:** Integrada la construcción y el escaneo de la imagen en el pipeline.
+           5 capas automáticas en cada push. Verde. 
+-  **Se rompió:** 8 veces. Por orden: copiar sin adaptar / "rum" en vez de "run" /
+           indentación y comillas al pegar / parámetro "ref" inventado por
+           leer una palabra del error en vez de la frase / uses con un comando
+           dentro / ruta del Dockerfile (contexto de build) / quitar el bloque
+           with al arreglar el uses. 
+-  **Aprendí:** Una acción es un envoltorio: lee en el log qué comando construyó
+           y trabaja hacia atrás hasta el parámetro que lo produjo.
+           Arreglar una cosa y romper otra en el mismo cambio = por eso
+           los commits pequeños.  
 -  **Pendiente:** Nada.
