@@ -30,6 +30,7 @@ jobs:
         with:
           scan-type: image
           image-ref: mi-api:hardened .
+          ref: main
           severity:  HIGH,CRITICAL
           exit-code: 1
 
