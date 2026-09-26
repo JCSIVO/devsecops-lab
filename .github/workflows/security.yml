@@ -28,9 +28,9 @@ jobs:
       - name: Trivy Image Scan
         uses: trivy image mi-api:hardened  # master
         with:
-          scan-type: 'image'
-          image-ref: 'mi-api:hardened'
-          severity: 'HIGH,CRITICAL'
+          scan-type: image
+          image-ref: mi-api:hardened .
+          severity:  HIGH,CRITICAL
           exit-code: 1
 
   sast:
