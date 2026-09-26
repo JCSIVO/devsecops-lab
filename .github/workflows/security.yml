@@ -22,6 +22,17 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: 1
 
+      - name: Build Docker image
+        rum: docker build -t mi-api:hardened .  # master
+      
+      - name: Trivy Image Scan
+        uses: trivy image mi-api:hardened  # master
+        with:
+        scan-type: 'image'
+        image-ref: 'mi-api:hardened'
+        severity: 'HIGH,CRITICAL'
+        exit-code: 1
+
   sast:
     runs-on: ubuntu-latest
     container: semgrep/semgrep
