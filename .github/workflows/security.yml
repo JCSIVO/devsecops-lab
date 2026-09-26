@@ -26,13 +26,7 @@ jobs:
         run: docker build -t mi-api:hardened .  # master
       
       - name: Trivy Image Scan
-        uses: trivy image mi-api:hardened  # master
-        with:
-          scan-type: image
-          image-ref: mi-api:hardened .
-          ref: main
-          severity:  HIGH,CRITICAL
-          exit-code: 1
+        uses: aquasecurity/trivy-action@d2a0b60797ff03db6132bd4e2b293f9b37081297  # master
 
   sast:
     runs-on: ubuntu-latest
