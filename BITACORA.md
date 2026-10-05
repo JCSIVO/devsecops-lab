@@ -86,3 +86,43 @@
            Arreglar una cosa y romper otra en el mismo cambio = por eso
            los commits pequeños.  
 -  **Pendiente:** Nada.
+
+  ## 2026-09-28 · ~20 min
+
+- **Hice:** Ver los vídeo de Platzi, convertir imagen en servicio web y gestión de imagenes (videos: 8-9)
+- **Se rompió:** Nada.
+- **Aprendí:** aprendí el comando -> docker run -it --rm -d -p 8080:80 --name mi-api mi-api
+- **Pendiente:** PAUSA de 5 días por viaje. Al volver: clases 8-11 de Docker
+  (gestión de imágenes y contenedores, capas y caché).
+
+## 2026-09-29 a 10-03 · PAUSA PLANIFICADA
+Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
+
+## 2026-10-05 · ~45 min · vuelta de la pausa
+
+- **Hice:** Clases 8 y 9 de Docker (gestión de contenedores e imágenes).
+  Levantado el contenedor de mi API endurecida y accedido a
+  `/weatherforecast`. Renombrado una imagen con `docker image tag`.
+
+- **Se rompió:** El navegador no mostraba nada aunque el contenedor corría.
+  Copié `-p 8080:80` del vídeo sin adaptarlo — ese 80 era de nginx, y mi API
+  escucha en el 8080. `docker logs` me lo dijo en la primera línea:
+  *Now listening on: http://[::]:8080*. Un cambio y a funcionar.
+
+- **Aprendí:**
+  - `docker logs` antes de tocar nada. Preguntarle al contenedor qué hace
+    en vez de adivinar.
+  - `docker image tag` NO copia nada: crea un segundo nombre sobre la misma
+    imagen, con el mismo IMAGE ID. Una etiqueta es un puntero que se puede
+    mover; un digest es contenido. **Es lo mismo que el hallazgo de Semgrep
+    del día 1 con `trivy-action@master`, visto desde el otro lado.**
+  - Swagger viene desactivado en Production a propósito: exponer la
+    documentación interactiva es regalar el mapa de endpoints.
+  - Volver a copiar un ejemplo sin adaptarlo. Error nº1 de mi lista de ocho,
+    repetido dos semanas después.
+
+- **Pendiente:**
+  - Clase 11 (desplegar una API en Docker) — mañana por la mañana.
+  - Los datos de la plantilla son absurdos: 38 °C etiquetado como "Chilly".
+    Fallo de lógica de negocio: válido en tipos, imposible en significado.
+    Ningún escáner lo detecta. Guardar para la semana 10 (IDOR).
