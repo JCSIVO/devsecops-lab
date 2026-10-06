@@ -126,3 +126,23 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
   - Los datos de la plantilla son absurdos: 38 °C etiquetado como "Chilly".
     Fallo de lógica de negocio: válido en tipos, imposible en significado.
     Ningún escáner lo detecta. Guardar para la semana 10 (IDOR).
+
+    ## 2026-10-06 · ~2h15
+
+- Hice: Vídeos 10-13 de Docker. Creada red propia (lab-net) y volumen con
+  nombre (pgdata). Postgres y mi API en la misma red, comunicándose por
+  nombre. Verificado que los datos sobreviven a destruir el contenedor.
+- Se rompió: Paré pgdb en vez de mi-api. Leí el error, docker ps, y lo vi.
+- Aprendí:
+  - Los contenedores se encuentran POR NOMBRE dentro de una red propia, no
+    por localhost. localhost dentro de un contenedor es ese contenedor.
+  - El porqué: dentro de la red responde el DNS interno de Docker
+    (127.0.0.11); fuera responde otro resolvedor que no conoce esos nombres.
+    Cada red es su propio universo de nombres.
+  - -p 127.0.0.1:... restringe la publicación en el host. No tiene nada que
+    ver con que dos contenedores se vean.
+  - Postgres sin -p: una base de datos no necesita puerta al exterior.
+    En docker ps se ve: la flecha -> solo aparece en lo publicado.
+  - Vídeos 10 y 11 poco aportaron: ya lo había hecho en la práctica.
+- Pendiente: El -e POSTGRES_PASSWORD queda en el historial del shell y en
+  docker inspect. Comprobarlo mañana.
