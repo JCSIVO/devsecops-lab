@@ -146,3 +146,22 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
   - Vídeos 10 y 11 poco aportaron: ya lo había hecho en la práctica.
 - Pendiente: El -e POSTGRES_PASSWORD queda en el historial del shell y en
   docker inspect. Comprobarlo mañana.
+
+  ## 2026-10-07 · ~45 min
+
+- Hice: Escaneo de secretos con trivy sobre mi-api:hardened (limpia) y
+  postgres:14 (1 hallazgo). Inspección de imagen vs contenedor.
+- Se rompió: Errata al copiar el nombre de la imagen. La leí en el error.
+  Tercera errata del mes resuelta sola; ya no me bloquean.
+- Aprendí:
+  - Trivy escanea IMÁGENES. Mi contraseña está en el CONTENEDOR
+    (docker inspect pgdb → Config.Env), en texto plano. El escáner no la ve.
+  - El hallazgo de postgres no era mi clave: era ssl-cert-snakeoil.key,
+    una clave de relleno de Debian. HIGH, real, y sin importancia: no
+    protege nada y la tiene todo el mundo. Primer falso positivo triado.
+  - Trivy enmascara el valor del secreto a propósito: un informe que
+    imprime secretos en los logs del CI es una vulnerabilidad.
+  - history vacío NO prueba que no esté: zsh no vuelca hasta cerrar sesión.
+    Resultado negativo de herramienta que no domino = no sé, no "no está".
+- Pendiente: ¿cómo se pasa entonces una contraseña a un contenedor sin
+  que acabe en docker inspect? (Docker secrets, ficheros montados, Key Vault).
