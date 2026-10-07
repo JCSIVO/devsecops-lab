@@ -43,7 +43,7 @@
 -  **Aprendí:** Los comandos básicos de Docker para compilar la imagen(`docker build .`, `images`, `docker build -t nombreImagen:latest .`)  y para eliminar la imagen `docker rmi -f` nombre de la imagen   
 -  **Pendiente:** Nada.
 
-  ### 2026-09-23 · ~40 min
+### 2026-09-23 · ~40 min
 
 -  **Hice:** Ejecutar trivy image mi-api:latest, para detectar los CVE críticos y altos. 
 -  **Se rompió:** Trivy cortó al descargar su BD de vulnerabilidades (GOAWAY del  servidor). Reintenté y fue. Lección: el escáner depende de una BD externa; en un pipeline real eso hay que cachearlo.
@@ -54,7 +54,7 @@
            contenedor corre como root.  
 -  **Pendiente:** Nada.
 
-  ### 2026-09-24 · ~40 min
+### 2026-09-24 · ~40 min
 
 -  **Hice:** Multi-stage build con imagen de runtime y usuario no root. 
 -  **Se rompió:** Nada. 
@@ -65,7 +65,7 @@
            importa de hoy.  
 -  **Pendiente:** Nada.
 
-  ### 2026-09-25 · ~30 min
+### 2026-09-25 · ~30 min
 
 -  **Hice:** Comparar los CVE de los dos días anteriores y realizar una tabla de comparación en el README del proyecto. 
 -  **Se rompió:** Nada. 
@@ -87,7 +87,7 @@
            los commits pequeños.  
 -  **Pendiente:** Nada.
 
-  ## 2026-09-28 · ~20 min
+### 2026-09-28 · ~20 min
 
 - **Hice:** Ver los vídeo de Platzi, convertir imagen en servicio web y gestión de imagenes (videos: 8-9)
 - **Se rompió:** Nada.
@@ -95,10 +95,11 @@
 - **Pendiente:** PAUSA de 5 días por viaje. Al volver: clases 8-11 de Docker
   (gestión de imágenes y contenedores, capas y caché).
 
-## 2026-09-29 a 10-03 · PAUSA PLANIFICADA
+### 2026-09-29 a 10-03 · PAUSA PLANIFICADA
+
 Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
 
-## 2026-10-05 · ~45 min · vuelta de la pausa
+### 2026-10-05 · ~45 min · vuelta de la pausa
 
 - **Hice:** Clases 8 y 9 de Docker (gestión de contenedores e imágenes).
   Levantado el contenedor de mi API endurecida y accedido a
@@ -127,7 +128,7 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
     Fallo de lógica de negocio: válido en tipos, imposible en significado.
     Ningún escáner lo detecta. Guardar para la semana 10 (IDOR).
 
-    ## 2026-10-06 · ~2h15
+### 2026-10-06 · ~2h15
 
 - Hice: Vídeos 10-13 de Docker. Creada red propia (lab-net) y volumen con
   nombre (pgdata). Postgres y mi API en la misma red, comunicándose por
@@ -147,7 +148,7 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
 - Pendiente: El -e POSTGRES_PASSWORD queda en el historial del shell y en
   docker inspect. Comprobarlo mañana.
 
-  ## 2026-10-07 · ~45 min
+### 2026-10-07 · ~45 min
 
 - Hice: Escaneo de secretos con trivy sobre mi-api:hardened (limpia) y
   postgres:14 (1 hallazgo). Inspección de imagen vs contenedor.
