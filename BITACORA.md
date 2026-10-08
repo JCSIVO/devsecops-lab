@@ -166,3 +166,41 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
     Resultado negativo de herramienta que no domino = no sé, no "no está".
 - Pendiente: ¿cómo se pasa entonces una contraseña a un contenedor sin
   que acabe en docker inspect? (Docker secrets, ficheros montados, Key Vault).
+
+### 2026-10-08 · ~2 h
+
+- **Hice:** Vídeos 14 a 19 de Docker. **Curso terminado.** Inspeccionadas las
+  capas de mi imagen con `docker history`. Primer intento de escribir un
+  `docker-compose.yml`.
+
+- **Se rompió:** El compose. Lo escribí como un script, metiendo comandos
+  `docker` dentro de `command:`. No es un fallo de sintaxis: Compose es
+  **declarativo**, no imperativo. No se le dice qué hacer, se le describe
+  qué debe existir. Cada `docker run` es un **servicio**, no una línea de
+  guion. Y `command:` es lo que se ejecuta DENTRO del contenedor — lo mismo
+  que iba después del nombre de la imagen en `busybox nslookup pgdb`.
+
+- **Aprendí:**
+  - `docker history` muestra el comando que creó cada capa. En mi imagen:
+    934 kB de código propio sobre 186 MB; el resto son runtimes necesarios.
+    En septiembre esto era una estimación; hoy lo he leído línea por línea.
+  - Las variables de entorno se ven **en texto plano** en el historial de
+    capas, aunque la capa pese 0 B.
+  - `docker save` produce un **tar** (no un rar) que se puede abrir y
+    recorrer: así se extrae un secreto de la imagen de otro.
+  - Publicar en un registro es **irreversible**: puedes borrar la imagen del
+    registro, no de las máquinas que ya la descargaron. Si sube un secreto,
+    se rota, no se borra.
+  - **Tercera vez que aparece el mismo principio** (historial de Git, capas
+    de Docker, etiquetas mutables): borrar no es eliminar.
+  - Correcciones a lo que decía el curso: es `docker compose build`, y el
+    atributo `version:` del compose está obsoleto.
+
+- **Pendiente:**
+  - Terminar el `docker-compose.yml` traduciendo los comandos del martes:
+    cada `docker run` → un servicio; red y volumen declarados arriba y
+    referenciados en cada servicio; Postgres sin `ports:`.
+  - **Aviso:** al pasar `POSTGRES_PASSWORD` al compose y hacer commit, el
+    secreto pasa de mi shell a GitHub, público y permanente en el historial.
+    Empeora respecto a ayer. Gitleaks debería pillármelo en el pipeline.
+    ¿Cómo se hace bien? (.env fuera de Git, Docker secrets, Key Vault).
