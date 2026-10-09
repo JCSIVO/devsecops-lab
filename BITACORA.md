@@ -204,3 +204,30 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
     secreto pasa de mi shell a GitHub, público y permanente en el historial.
     Empeora respecto a ayer. Gitleaks debería pillármelo en el pipeline.
     ¿Cómo se hace bien? (.env fuera de Git, Docker secrets, Key Vault).
+
+### 2026-10-09/10 · ~1h30
+
+- Hice: docker-compose.yml completo y funcionando. Red, volumen, Postgres
+  y mi API levantados con un solo comando.
+- Se rompió:
+  - Flags del CLI dentro del YAML (-e, -v, --network): el nombre de la
+    clave ya hace el trabajo del flag.
+  - = en vez de : en environment. Faltaban los guiones de las listas.
+  - Indentación, otra vez. Transcribí en vez de copiar.
+  - Puerto 8080 ocupado por el contenedor que creé a mano el martes.
+- Aprendí:
+  - Compose es DECLARATIVO: describes qué debe existir, no qué hacer.
+  - Compose solo gestiona lo que él crea. Lo levantado a mano le es
+    invisible y choca con él. Al pasar a declarativo hay que limpiar.
+  - Prefija todo con el nombre del proyecto (mi-api_pgdata), así que no
+    son los mismos volúmenes ni redes que los del martes.
+  - docker compose config valida sin levantar nada. Usarlo siempre antes.
+- Pendiente:
+  - El context está duplicado (mi-api/mi-api) y la imagen es mi-api:latest,
+    no la endurecida. Revisar.
+  - El compose vive en mi-api/ pero describe dos servicios: su sitio es la
+    raíz del repo.
+  - POSTGRES_PASSWORD en texto plano en un fichero que va a Git.
+    Si hago commit, gitleaks debería pillarme a mí.
+- Mañana sábado: crear cuenta en PortSwigger Web Security Academy y hacer
+  el bloque completo de SQL injection. Labs, no solo teoría.
