@@ -222,6 +222,12 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
   - Prefija todo con el nombre del proyecto (mi-api_pgdata), así que no
     son los mismos volúmenes ni redes que los del martes.
   - docker compose config valida sin levantar nada. Usarlo siempre antes.
+  - Subí el compose con POSTGRES_PASSWORD=ejemplo123 y gitleaks lo
+    dejó pasar. Detecta por PATRÓN (AKIA..., ghp_..., BEGIN KEY...),
+    no entiende contexto. Una contraseña humana corriente es
+    invisible para él. Verde ≠ limpio: verde = sin secretos con
+    formato reconocible. Tercera vez este mes que un cero significa
+    ceguera y no limpieza.
 - Pendiente:
   - El context está duplicado (mi-api/mi-api) y la imagen es mi-api:latest,
     no la endurecida. Revisar.
