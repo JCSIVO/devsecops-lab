@@ -1,0 +1,26 @@
+services:
+  pgdb:
+    image: postgres:14
+    environment:
+      POSTGRES_PASSWORD: ejemplo123
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - lab-net
+
+  mi-api:
+    image: mi-api
+    networks:
+      - lab-net
+    build:
+      context: mi-api
+      dockerfile: Dockerfile
+    ports:
+      - 127.0.0.1:8080:8080
+      
+volumes:
+  pgdata:
+networks:
+  lab-net:
+   
+  
