@@ -43,7 +43,7 @@
 -  **Aprendí:** Los comandos básicos de Docker para compilar la imagen(`docker build .`, `images`, `docker build -t nombreImagen:latest .`)  y para eliminar la imagen `docker rmi -f` nombre de la imagen   
 -  **Pendiente:** Nada.
 
-  ### 2026-09-23 · ~40 min
+### 2026-09-23 · ~40 min
 
 -  **Hice:** Ejecutar trivy image mi-api:latest, para detectar los CVE críticos y altos. 
 -  **Se rompió:** Trivy cortó al descargar su BD de vulnerabilidades (GOAWAY del  servidor). Reintenté y fue. Lección: el escáner depende de una BD externa; en un pipeline real eso hay que cachearlo.
@@ -54,7 +54,7 @@
            contenedor corre como root.  
 -  **Pendiente:** Nada.
 
-  ### 2026-09-24 · ~40 min
+### 2026-09-24 · ~40 min
 
 -  **Hice:** Multi-stage build con imagen de runtime y usuario no root. 
 -  **Se rompió:** Nada. 
@@ -65,7 +65,7 @@
            importa de hoy.  
 -  **Pendiente:** Nada.
 
-  ### 2026-09-25 · ~30 min
+### 2026-09-25 · ~30 min
 
 -  **Hice:** Comparar los CVE de los dos días anteriores y realizar una tabla de comparación en el README del proyecto. 
 -  **Se rompió:** Nada. 
@@ -86,3 +86,148 @@
            Arreglar una cosa y romper otra en el mismo cambio = por eso
            los commits pequeños.  
 -  **Pendiente:** Nada.
+
+### 2026-09-28 · ~20 min
+
+- **Hice:** Ver los vídeo de Platzi, convertir imagen en servicio web y gestión de imagenes (videos: 8-9)
+- **Se rompió:** Nada.
+- **Aprendí:** aprendí el comando -> docker run -it --rm -d -p 8080:80 --name mi-api mi-api
+- **Pendiente:** PAUSA de 5 días por viaje. Al volver: clases 8-11 de Docker
+  (gestión de imágenes y contenedores, capas y caché).
+
+### 2026-09-29 a 10-03 · PAUSA PLANIFICADA
+
+Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
+
+### 2026-10-05 · ~45 min · vuelta de la pausa
+
+- **Hice:** Clases 8 y 9 de Docker (gestión de contenedores e imágenes).
+  Levantado el contenedor de mi API endurecida y accedido a
+  `/weatherforecast`. Renombrado una imagen con `docker image tag`.
+
+- **Se rompió:** El navegador no mostraba nada aunque el contenedor corría.
+  Copié `-p 8080:80` del vídeo sin adaptarlo — ese 80 era de nginx, y mi API
+  escucha en el 8080. `docker logs` me lo dijo en la primera línea:
+  *Now listening on: http://[::]:8080*. Un cambio y a funcionar.
+
+- **Aprendí:**
+  - `docker logs` antes de tocar nada. Preguntarle al contenedor qué hace
+    en vez de adivinar.
+  - `docker image tag` NO copia nada: crea un segundo nombre sobre la misma
+    imagen, con el mismo IMAGE ID. Una etiqueta es un puntero que se puede
+    mover; un digest es contenido. **Es lo mismo que el hallazgo de Semgrep
+    del día 1 con `trivy-action@master`, visto desde el otro lado.**
+  - Swagger viene desactivado en Production a propósito: exponer la
+    documentación interactiva es regalar el mapa de endpoints.
+  - Volver a copiar un ejemplo sin adaptarlo. Error nº1 de mi lista de ocho,
+    repetido dos semanas después.
+
+- **Pendiente:**
+  - Clase 11 (desplegar una API en Docker) — mañana por la mañana.
+  - Los datos de la plantilla son absurdos: 38 °C etiquetado como "Chilly".
+    Fallo de lógica de negocio: válido en tipos, imposible en significado.
+    Ningún escáner lo detecta. Guardar para la semana 10 (IDOR).
+
+### 2026-10-06 · ~2h15
+
+- Hice: Vídeos 10-13 de Docker. Creada red propia (lab-net) y volumen con
+  nombre (pgdata). Postgres y mi API en la misma red, comunicándose por
+  nombre. Verificado que los datos sobreviven a destruir el contenedor.
+- Se rompió: Paré pgdb en vez de mi-api. Leí el error, docker ps, y lo vi.
+- Aprendí:
+  - Los contenedores se encuentran POR NOMBRE dentro de una red propia, no
+    por localhost. localhost dentro de un contenedor es ese contenedor.
+  - El porqué: dentro de la red responde el DNS interno de Docker
+    (127.0.0.11); fuera responde otro resolvedor que no conoce esos nombres.
+    Cada red es su propio universo de nombres.
+  - -p 127.0.0.1:... restringe la publicación en el host. No tiene nada que
+    ver con que dos contenedores se vean.
+  - Postgres sin -p: una base de datos no necesita puerta al exterior.
+    En docker ps se ve: la flecha -> solo aparece en lo publicado.
+  - Vídeos 10 y 11 poco aportaron: ya lo había hecho en la práctica.
+- Pendiente: El -e POSTGRES_PASSWORD queda en el historial del shell y en
+  docker inspect. Comprobarlo mañana.
+
+### 2026-10-07 · ~45 min
+
+- Hice: Escaneo de secretos con trivy sobre mi-api:hardened (limpia) y
+  postgres:14 (1 hallazgo). Inspección de imagen vs contenedor.
+- Se rompió: Errata al copiar el nombre de la imagen. La leí en el error.
+  Tercera errata del mes resuelta sola; ya no me bloquean.
+- Aprendí:
+  - Trivy escanea IMÁGENES. Mi contraseña está en el CONTENEDOR
+    (docker inspect pgdb → Config.Env), en texto plano. El escáner no la ve.
+  - El hallazgo de postgres no era mi clave: era ssl-cert-snakeoil.key,
+    una clave de relleno de Debian. HIGH, real, y sin importancia: no
+    protege nada y la tiene todo el mundo. Primer falso positivo triado.
+  - Trivy enmascara el valor del secreto a propósito: un informe que
+    imprime secretos en los logs del CI es una vulnerabilidad.
+  - history vacío NO prueba que no esté: zsh no vuelca hasta cerrar sesión.
+    Resultado negativo de herramienta que no domino = no sé, no "no está".
+- Pendiente: ¿cómo se pasa entonces una contraseña a un contenedor sin
+  que acabe en docker inspect? (Docker secrets, ficheros montados, Key Vault).
+
+### 2026-10-08 · ~2 h
+
+- **Hice:** Vídeos 14 a 19 de Docker. **Curso terminado.** Inspeccionadas las
+  capas de mi imagen con `docker history`. Primer intento de escribir un
+  `docker-compose.yml`.
+
+- **Se rompió:** El compose. Lo escribí como un script, metiendo comandos
+  `docker` dentro de `command:`. No es un fallo de sintaxis: Compose es
+  **declarativo**, no imperativo. No se le dice qué hacer, se le describe
+  qué debe existir. Cada `docker run` es un **servicio**, no una línea de
+  guion. Y `command:` es lo que se ejecuta DENTRO del contenedor — lo mismo
+  que iba después del nombre de la imagen en `busybox nslookup pgdb`.
+
+- **Aprendí:**
+  - `docker history` muestra el comando que creó cada capa. En mi imagen:
+    934 kB de código propio sobre 186 MB; el resto son runtimes necesarios.
+    En septiembre esto era una estimación; hoy lo he leído línea por línea.
+  - Las variables de entorno se ven **en texto plano** en el historial de
+    capas, aunque la capa pese 0 B.
+  - `docker save` produce un **tar** (no un rar) que se puede abrir y
+    recorrer: así se extrae un secreto de la imagen de otro.
+  - Publicar en un registro es **irreversible**: puedes borrar la imagen del
+    registro, no de las máquinas que ya la descargaron. Si sube un secreto,
+    se rota, no se borra.
+  - **Tercera vez que aparece el mismo principio** (historial de Git, capas
+    de Docker, etiquetas mutables): borrar no es eliminar.
+  - Correcciones a lo que decía el curso: es `docker compose build`, y el
+    atributo `version:` del compose está obsoleto.
+
+- **Pendiente:**
+  - Terminar el `docker-compose.yml` traduciendo los comandos del martes:
+    cada `docker run` → un servicio; red y volumen declarados arriba y
+    referenciados en cada servicio; Postgres sin `ports:`.
+  - **Aviso:** al pasar `POSTGRES_PASSWORD` al compose y hacer commit, el
+    secreto pasa de mi shell a GitHub, público y permanente en el historial.
+    Empeora respecto a ayer. Gitleaks debería pillármelo en el pipeline.
+    ¿Cómo se hace bien? (.env fuera de Git, Docker secrets, Key Vault).
+
+### 2026-10-09/10 · ~1h30
+
+- Hice: docker-compose.yml completo y funcionando. Red, volumen, Postgres
+  y mi API levantados con un solo comando.
+- Se rompió:
+  - Flags del CLI dentro del YAML (-e, -v, --network): el nombre de la
+    clave ya hace el trabajo del flag.
+  - = en vez de : en environment. Faltaban los guiones de las listas.
+  - Indentación, otra vez. Transcribí en vez de copiar.
+  - Puerto 8080 ocupado por el contenedor que creé a mano el martes.
+- Aprendí:
+  - Compose es DECLARATIVO: describes qué debe existir, no qué hacer.
+  - Compose solo gestiona lo que él crea. Lo levantado a mano le es
+    invisible y choca con él. Al pasar a declarativo hay que limpiar.
+  - Prefija todo con el nombre del proyecto (mi-api_pgdata), así que no
+    son los mismos volúmenes ni redes que los del martes.
+  - docker compose config valida sin levantar nada. Usarlo siempre antes.
+- Pendiente:
+  - El context está duplicado (mi-api/mi-api) y la imagen es mi-api:latest,
+    no la endurecida. Revisar.
+  - El compose vive en mi-api/ pero describe dos servicios: su sitio es la
+    raíz del repo.
+  - POSTGRES_PASSWORD en texto plano en un fichero que va a Git.
+    Si hago commit, gitleaks debería pillarme a mí.
+- Mañana sábado: crear cuenta en PortSwigger Web Security Academy y hacer
+  el bloque completo de SQL injection. Labs, no solo teoría.
