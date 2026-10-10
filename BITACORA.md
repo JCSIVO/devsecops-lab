@@ -237,3 +237,35 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
     Si hago commit, gitleaks debería pillarme a mí.
 - Mañana sábado: crear cuenta en PortSwigger Web Security Academy y hacer
   el bloque completo de SQL injection. Labs, no solo teoría.
+
+  2026-10-10 · ~3 h · primer día de PortSwigger / AppSec
+
+- Hice: Teoría de arranque de SQLi + 3 labs resueltos.
+  Lab 1 (Apprentice) — Retrieving hidden data
+  Lab 2 (Apprentice) — Login bypass
+  Lab 3 (PRACTITIONER) — UNION, contar columnas
+
+- Lab 1: SELECT ... WHERE category='...' AND released=1
+  Payload: '--  (comilla + espacio + dos guiones)
+  Comenté el AND released=1 para ver productos ocultos.
+  Tropiezo: -- sin espacio detrás no comenta.
+
+- Lab 2: SELECT ... WHERE username='...' AND password='...'
+  Inyecté en el campo USUARIO: administrator'--
+  Comenté la comprobación de contraseña → entro como admin sin saberla.
+  La contraseña da igual porque queda comentada.
+
+- Lab 3: filtro de categoría (en la URL, como el lab 1)
+  Gifts' UNION SELECT NULL,NULL,NULL--  → 3 columnas.
+  NULL porque encaja en cualquier tipo: así mido SOLO el nº de columnas,
+  no el tipo (misma idea que la sonda neutra).
+  Tropiezo: olvidé la ' antes de UNION → error de servidor. La comilla
+  es lo que rompe la cadena y te mete en el SQL.
+
+- Aprendí: el enunciado de cada lab NOMBRA el punto de inyección
+  ("category filter", "login function"). Leerlo dos veces antes de buscar.
+  Inyectas DONDE tu dato entra en la consulta, no "en la URL o en el form"
+  por norma.
+
+- Pendiente: lunes → seguir en UNION. Ya sé que son 3 columnas; toca
+  encontrar cuál admite texto y sacar datos de otras tablas.
