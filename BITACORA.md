@@ -97,7 +97,7 @@
 
 ### 2026-09-29 a 10-03 · PAUSA PLANIFICADA
 
-Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
+  - Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
 
 ### 2026-10-05 · ~45 min · vuelta de la pausa
 
@@ -238,7 +238,7 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
 - Mañana sábado: crear cuenta en PortSwigger Web Security Academy y hacer
   el bloque completo de SQL injection. Labs, no solo teoría.
 
-  2026-10-10 · ~3 h · primer día de PortSwigger / AppSec
+###  2026-10-10 · ~3 h · primer día de PortSwigger / AppSec
 
 - Hice: Teoría de arranque de SQLi + 3 labs resueltos.
   Lab 1 (Apprentice) — Retrieving hidden data
@@ -269,3 +269,44 @@ Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
 
 - Pendiente: lunes → seguir en UNION. Ya sé que son 3 columnas; toca
   encontrar cuál admite texto y sacar datos de otras tablas.
+
+### 2026-10-12 · ~2h · mañana · UNION completo + OWASP
+
+- **Hice:** Labs 4, 5 y 6 de SQLi (sección UNION cerrada) + lectura de
+  OWASP Top 10 2025: A01 Broken Access Control y A05 Injection.
+
+- **Lab 4 — UNION, columna de tipo texto** (Practitioner)
+  Payload: Gifts' UNION SELECT NULL,'Gb1lYr',NULL--
+  Ya sabía que eran 3 columnas (lab 3). Probé el string en cada posición
+  con NULL en las demás → la columna 2 admite texto.
+
+- **Lab 5 — UNION, datos de otra tabla** (Practitioner)
+  Payload: ' UNION SELECT username, password FROM users--
+  OJO: este lab eran 2 columnas, no 3. El nº de columnas es de cada app.
+  Volqué la tabla users y me logueé como administrator.
+
+- **Lab 6 — UNION, varios valores en una sola columna** (Practitioner)
+  Solo UNA columna admite texto, pero necesito DOS valores (user y pass).
+  Paso 1: ' UNION SELECT NULL,'administrator'--  → confirmo la columna texto.
+  Paso 2: ' UNION SELECT NULL, username || '~' || password FROM users--
+  Concatené ambos valores en esa columna separados por '~'. Login con el
+  admin → resuelto.
+
+- **Ayuda:** En el lab 6, tras 15-20 min atascado, miré la pista. Lo que me
+  faltaba era concatenar con || en una sola columna. El resto lo hice yo.
+
+- **Aprendí:**
+  - || concatena valores en una columna (Oracle/PostgreSQL; en MySQL CONCAT()).
+    El separador (~) distingue los dos valores en la salida.
+  - El nº de columnas se mide de cero en cada app, nunca se asume.
+  - NULL = sonda neutra (4ª vez que aparece la idea).
+  - OWASP: lo que acabo de explotar tiene nombre. A05 Injection = mis labs
+    de SQLi. A01 Broken Access Control = convertirme en administrator sin
+    permiso. Y la nueva A03 2025 (Software Supply Chain) = lo que vi con
+    Docker (etiquetas mutables, capas). Mi trabajo de las últimas semanas
+    ya era OWASP sin saberlo.
+
+- **Pendiente:**
+  - Siguiente sección: "Examining the database" — tipo y versión de la BD,
+    listar tablas y columnas. Dejo de conocer la estructura de antemano y
+    aprendo a descubrirla yo.
