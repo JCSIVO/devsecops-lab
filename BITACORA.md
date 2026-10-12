@@ -288,16 +288,16 @@
 - **Lab 6 — UNION, varios valores en una sola columna** (Practitioner)
   Solo UNA columna admite texto, pero necesito DOS valores (user y pass).
   Paso 1: ' UNION SELECT NULL,'administrator'--  → confirmo la columna texto.
-  Paso 2: ' UNION SELECT NULL, username || '~' || password FROM users--
-  Concatené ambos valores en esa columna separados por '~'. Login con el
+  Paso 2: `' UNION SELECT NULL, username || '~' || password FROM users--`
+  Concatené ambos valores en esa columna separados por `~`. Login con el
   admin → resuelto.
 
 - **Ayuda:** En el lab 6, tras 15-20 min atascado, miré la pista. Lo que me
   faltaba era concatenar con || en una sola columna. El resto lo hice yo.
 
 - **Aprendí:**
-  - || concatena valores en una columna (Oracle/PostgreSQL; en MySQL CONCAT()).
-    El separador (~) distingue los dos valores en la salida.
+  - `||` concatena valores en una columna (Oracle/PostgreSQL; en MySQL `CONCAT()`).
+    El separador (`~`) distingue los dos valores en la salida.
   - El nº de columnas se mide de cero en cada app, nunca se asume.
   - NULL = sonda neutra (4ª vez que aparece la idea).
   - OWASP: lo que acabo de explotar tiene nombre. A05 Injection = mis labs
