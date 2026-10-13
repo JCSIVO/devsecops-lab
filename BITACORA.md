@@ -310,3 +310,31 @@
   - Siguiente sección: "Examining the database" — tipo y versión de la BD,
     listar tablas y columnas. Dejo de conocer la estructura de antemano y
     aprendo a descubrirla yo.
+
+### Martes 13 octubre 2026 — PortSwigger SQLi · "Examining the database"
+
+**Tiempo:** ~60 min (de ellos ~45 de atasco antes de pedir ayuda)
+**Lab:** *SQL injection attack, querying the database type and version on MySQL and Microsoft* → **SOLVED**
+**Objetivo:** hacer que la BBDD devuelva su versión → `8.0.42-0ubuntu0.20.04.1`
+
+### Qué hice
+- Conté columnas con UNION (2 columnas de texto) y sustituí una por la consulta de versión.
+- Payload final: `' UNION SELECT @@version,'def'#`
+- En la URL, el `#` codificado: `...SELECT @@version,'def'%23`
+
+### Dónde me atasqué y por qué
+Todos mis intentos daban **internal server error**, probara 1, 2, 3 o 4 columnas.
+Incluso la solución oficial de PortSwigger "no funcionaba"… porque ellos la lanzan desde Burp.
+
+### Lecciones (las de verdad)
+1. **Capa de transporte.** El `#` es comentario en SQL pero **delimitador de fragmento en una URL**: el navegador corta y NO envía nada después del `#`. Por eso mi comentario nunca llegaba a la BBDD y la comilla original quedaba sin cerrar → error. Solución en navegador: codificarlo como `%23`. En Burp viaja literal, sin codificar.
+2. **Diagnóstico.** Si *todos* los intentos fallan igual, el fallo es **estructural, no del número de columnas**. Si fuera de columnas, exactamente uno funcionaría.
+3. **Verde ≠ aprendido.** Mi primer "solved" lo saqué escribiendo el string de versión a mano (`'8.0.42...'`) como literal. El checker se pone verde porque solo busca esa cadena en la página, pero eso no demuestra nada: en un pentest real NO conoces la versión. Lo correcto es `@@version`, que **la resuelve el servidor**, no yo. (4ª vez que un verde significa otra cosa de la que parece.)
+
+### Decisión
+Me descargo e instalo **Burp Suite Community** en el Mac. A partir del próximo lab de inyección, todo por Burp (Proxy → Send to Repeater). Mañana lo configuro.
+
+### Pendiente
+- Configurar Burp y validar el flujo Proxy → Repeater (primeros 10 min de la próxima sesión).
+- Terminar "Examining the database": lab de listar tablas/columnas.
+- Después: labs de Access Control / IDOR (aplazados, no saltados).
