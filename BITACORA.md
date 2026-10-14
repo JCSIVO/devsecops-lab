@@ -338,3 +338,29 @@ Me descargo e instalo **Burp Suite Community** en el Mac. A partir del próximo 
 - Configurar Burp y validar el flujo Proxy → Repeater (primeros 10 min de la próxima sesión).
 - Terminar "Examining the database": lab de listar tablas/columnas.
 - Después: labs de Access Control / IDOR (aplazados, no saltados).
+
+### Miércoles 14 octubre 2026 — PortSwigger SQLi · "Listing database contents" (PostgreSQL) · estreno de Burp
+
+**Tiempo:** sesión nocturna, cerrada pasada la medianoche (más larga de lo previsto)
+**Lab:** *SQL injection attack, listing the database contents on non-Oracle databases* → **SOLVED** (login como `administrator`)
+**Primera sesión real con Burp Suite** (Proxy → Repeater), tras configurarlo hoy.
+
+### Qué hice
+1. Listar tablas: `' union select table_name, null from information_schema.tables --`
+2. Listar columnas de la tabla de usuarios: `' union SELECT COLUMN_NAME, null FROM information_schema.columns WHERE table_name = 'users_teorfa' --`
+3. Extraer credenciales: `' union SELECT username_sjciua, password_zmwajc FROM users_teorfa --`
+
+Resultado → `administrator` / `paw9dv6oosx5fxi77mmk` (en texto plano) → login → lab resuelto.
+
+### Lecciones (las de verdad)
+1. **Tablas del motor ≠ tablas de la app.** Me metí primero en `pg_user` y las claves salían cifradas: `pg_*` e `information_schema` son el catálogo de sistema de PostgreSQL (las cuentas del propio servidor), no el login de la web. Los usuarios de la aplicación viven en el esquema `public`. Mismo concepto que `sys.sql_logins` en SQL Server.
+2. **No escanear a ojo, filtrar con la BBDD.** Buscar la tabla entre 220 nombres a mano es la técnica equivocada. Con `WHERE table_schema = 'public'` el motor me deja solo 2 tablas (`products` y `users_teorfa`). Recon = hacer que la base de datos trabaje por mí.
+3. **PortSwigger aleatoriza nombres de tabla Y de columna** (`users_teorfa`, `username_sjciua`, `password_zmwajc`) justo para que no se puedan memorizar y haya que enumerar. Recon de verdad.
+4. **Un resultado vacío puede ser la herramienta fallando, no un "no hay datos".** Esto me costó tiempo: acerté la tabla `users_teorfa` al 2º intento, pero Burp no renderizó bien la respuesta y la di por mala. Me volví a la URL y me puse a probar otras tablas… para acabar en la misma. Lección: antes de descartar, confirmar que la herramienta está mostrando de verdad la respuesta. (Es el mismo patrón de siempre: distinguir fallo de herramienta de resultado real. Vacío ≠ negativo.)
+
+### Reflexión AppSec (lo que me llevo a mi trabajo)
+La contraseña estaba en **texto plano** en la tabla — por eso con leerla ya entraba. Esa es la vulnerabilidad *encima* de la SQLi: `pg_user` sí las tenía hasheadas, la app no. En mi código .NET: nunca almacenar contraseñas en claro; hash + salt siempre.
+
+### Pendiente
+- Afinar el flujo en Burp para no volver a confundir un fallo de render con un resultado vacío.
+- Siguiente bloque de "Examining the database" o pasar a los labs de UNION restantes según toque en la ruta.
