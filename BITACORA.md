@@ -364,3 +364,38 @@ La contraseña estaba en **texto plano** en la tabla — por eso con leerla ya e
 ### Pendiente
 - Afinar el flujo en Burp para no volver a confundir un fallo de render con un resultado vacío.
 - Siguiente bloque de "Examining the database" o pasar a los labs de UNION restantes según toque en la ruta.
+
+### Jueves 15 octubre 2026 — PortSwigger · Blind SQLi con respuestas condicionales
+
+**Tiempo:** sesión nocturna larga, cerrada ~02:00 (el Intruder estrangulado de la Community tardó lo suyo)
+**Lab:** *Blind SQL injection with conditional responses* → **SOLVED** · **sin mirar la solución**
+**Resultado:** login como `administrator` / `yg4bjc7q78qc9rz3qmg1`
+
+### El concepto que he interiorizado
+En SQLi **ciega** no ves los datos ni los errores: solo tienes un indicador de sí/no. Aquí el "Welcome back!" = la consulta devolvió filas = condición **verdadera**. Así conviertes la BBDD en un **oráculo de 1 bit por petición** y sacas la contraseña carácter a carácter.
+
+### Qué hice
+1. Longitud (búsqueda binaria con `>`): `' AND LENGTH((SELECT password FROM users WHERE username='administrator')) = 20 --` → 20 caracteres.
+2. Extracción por posición: `' AND SUBSTRING((SELECT password FROM users WHERE username='administrator'), 1, 1) = 'y' --` → 1ª letra `y`.
+3. Para las 20: **Burp Intruder, Cluster bomb** con dos posiciones (Payload 1 = índice del `SUBSTRING`, Payload 2 = carácter a probar). Las verdaderas se leen ordenando por índice y leyendo el carácter.
+
+### Errores de principiante (los cacé yo)
+- Olvidé el `--` de cierre al principio.
+- El sistema me "autocorrigió" las comillas simples por tipográficas (`'`) que la BBDD no interpreta → corregido. Lección: en Repeater/Intruder, petición cruda, nadie te cambia las comillas.
+
+### El verdadero aprendizaje de hoy: depurar el Intruder
+Me pasé un buen rato con **0 resultados** y tuve que ir descartando fallos uno a uno:
+1. **La petición era la plantilla `/example` de Burp, no la del lab** → todas 404 → ningún "Welcome back" posible. Fix: mandar la petición real (`GET /` con mi cookie) desde Proxy → Send to Intruder.
+2. **Me faltaban los dígitos en el charset.** Cargué solo letras `a–z` y la clave tiene números (`yg4bjc7...`) → posiciones numéricas sin acierto. Lo vi, añadí `0–9` y salió completa.
+3. **El oráculo: la longitud.** El grep no me marcaba, pero al **ordenar por `Length`** las verdaderas saltan solas: `11623` (con "Welcome back!") vs `11562` (sin él). La longitud fue la señal fiable.
+4. Detalles: Intercept en **Off** para Intruder; `SUBSTRING` cuenta desde **1**, no desde 0.
+
+### Lección madre (otra vez, 3ª variación)
+Con **0 resultados, no dudes del método: verifica que la herramienta apunta donde crees.** Un vacío total casi nunca es "no hay datos" — es que estás disparando al sitio equivocado (hoy el `/example`; el martes la tabla `users_teorfa` que Burp no renderizaba). Y cuando un indicador no responde (el grep), **contrasta con otro** (la longitud).
+
+### Reflexión AppSec (a mi trabajo)
+Dos cosas: (1) la contraseña estaba **en texto plano** otra vez → hash + salt siempre. (2) La "ceguera" NO protege: aunque la app no muestre datos ni errores, se filtran bit a bit. La única defensa real es la **consulta parametrizada**; esconder la salida no sirve de nada.
+
+### Pendiente
+- Idea para desarrollador: reescribir esta extracción como **script en Python con `requests`** — sin el estrangulamiento de la Community y mucho más rápido. Gran ejercicio y muy vendible.
+- Siguiente: blind SQLi basada en **errores** y en **tiempo** (los labs que vienen).
