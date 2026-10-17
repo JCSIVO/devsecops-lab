@@ -399,3 +399,43 @@ Dos cosas: (1) la contraseña estaba **en texto plano** otra vez → hash + salt
 ### Pendiente
 - Idea para desarrollador: reescribir esta extracción como **script en Python con `requests`** — sin el estrangulamiento de la Community y mucho más rápido. Gran ejercicio y muy vendible.
 - Siguiente: blind SQLi basada en **errores** y en **tiempo** (los labs que vienen).
+
+### Viernes 16 octubre 2026 — PortSwigger · Blind SQLi con errores condicionales (Oracle)
+
+**Tiempo:** sesión nocturna larga, cerrada ~02:15
+**Lab:** *Blind SQL injection with conditional errors* → **SOLVED** · login como `administrator`
+**Contraseña:** `49b5k9wdyl2vghwcc2mt`
+**Honestidad:** miré parte de la solución tras quedarme sin ideas. Dentro de protocolo, PERO → **marcado para rehacer en frío** (test real de si lo he aprendido).
+
+### El mayor acierto (y fue mío)
+Diagnostiqué que la BBDD era **Oracle** razonando desde los síntomas: todos mis intentos con sintaxis MySQL devolvían 500 → "si todo lo de MySQL falla, es que NO es MySQL". Esa deducción es el núcleo del lab.
+
+### El concepto: blind basada en ERRORES
+Aquí no hay "Welcome back" ni diferencia por filas devueltas. El **único oráculo es si la consulta peta o no**: HTTP **500** (error) = condición verdadera, **200** = falsa. Se fuerza un error condicional:
+`(SELECT CASE WHEN <condición> THEN TO_CHAR(1/0) ELSE '' END FROM dual)`
+El `1/0` (división por cero) solo se ejecuta cuando la condición es verdadera → error a propósito.
+
+### Lo que me costó entender: `||` vs `AND`
+- `||` es **concatenación de cadenas** en Oracle. Mi inyección vive DENTRO de un string (`WHERE trackingId = '...'`), así que concatenar una subconsulta mantiene la sintaxis válida como expresión de texto Y obliga a la BBDD a **ejecutar** esa subconsulta para construir el string.
+- El `||'` final **se autocierra** reutilizando la comilla de cierre que ya tenía la consulta → no necesita `--`. (Yo usé `--` para truncar; también vale. Dos estilos: envolver vs truncar.)
+- **OJO, no es "AND malo, || bueno".** Mis intentos con `AND` fallaron por usar **sintaxis MySQL sobre Oracle**, no por el `AND`:
+  - `SUBSTRING` → en Oracle es `SUBSTR`.
+  - Faltaba `FROM dual` / tabla (Oracle no deja SELECT sin FROM).
+  - Mezclaba tipos: `THEN 1/0 ELSE 'a'` (número vs string) → error de tipos SIEMPRE, por eso 500 a todo.
+
+### Sintaxis Oracle a fichar
+`SUBSTR` · `TO_CHAR` · `ROWNUM` / `WHERE rownum=1` · `FROM dual`. Cada motor su dialecto — tener la cheat sheet delante es lo normal.
+
+### Intruder
+Marcador de payload sobre el carácter a probar, charset `a-z` + `0-9`, y el oráculo es la columna **Status = 500**.
+
+### Lecciones extra (depurar la clave)
+- **Oracle `SUBSTR(x,0,1)` devuelve el PRIMER carácter, no vacío** → el índice 0 duplica la posición 1. Empezar siempre en 1, o te sobra una letra al principio (clave de 21 en vez de 20). Versión Oracle del `From 0 → 1`.
+- **Caracteres ambiguos de fuente** (`l`/`1`/`I`, `0`/`O`): un solo carácter mal leído tira el login entero. Al transcribir una contraseña, revisa estos con lupa. Mi fallo fue leer la `l` (ele) de la posición 10 como un `1`.
+
+### Reflexión AppSec (a mi trabajo)
+Lo más inquietante: aun con una app **totalmente muda** (sin salida, sin diferencia por filas), los datos se filtran por el canal error/no-error. Defensas en mi código .NET: (1) **consultas parametrizadas** siempre; (2) **páginas de error genéricas** — nunca devolver el mensaje de error de la BBDD ni dejar que el 500 vs 200 sea observable con esta granularidad.
+
+### Pendiente
+- **Rehacer este lab en frío** (instancia nueva, sin solución).
+- Siguiente: blind basada en **tiempo** (cuando no hay ni error visible — `dbms_pipe.receive_message` en Oracle, etc.).
