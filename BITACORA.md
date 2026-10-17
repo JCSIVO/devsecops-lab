@@ -439,3 +439,60 @@ Lo más inquietante: aun con una app **totalmente muda** (sin salida, sin difere
 ### Pendiente
 - **Rehacer este lab en frío** (instancia nueva, sin solución).
 - Siguiente: blind basada en **tiempo** (cuando no hay ni error visible — `dbms_pipe.receive_message` en Oracle, etc.).
+
+### Sábado 17 – domingo 18 octubre 2026 (madrugada) — PortSwigger · SQLi: error visible + time-based (+ primer script propio)
+
+**Resumen del día:** dos labs de SQLi resueltos. Con ellos cierro el **mapa completo** de canales de exfiltración. Y monté mi primera herramienta de explotación en Python.
+
+---
+
+### LAB 1 — Visible error-based SQL injection (PostgreSQL) → SOLVED
+**Tiempo:** sesión de tarde (a hora decente 👌) · **Resuelto solo** (busqué en la red el significado de los errores = recon, no la solución).
+**Credenciales:** `administrator` / `rr0lh59ziehn6rnvipi3`
+
+**Técnica — fuga por el mensaje de error:**
+`' AND 1 = CAST((SELECT password FROM users LIMIT 1) AS int) --`
+`CAST(texto AS int)` falla y PostgreSQL **incluye el valor en el error**:
+`ERROR: invalid input syntax for type integer: "rr0lh59ziehn6rnvipi3"` → ahí está el dato.
+- `LIMIT 1` + una sola columna: el `CAST` necesita **un valor escalar** (una fila, una columna).
+
+**Salto conceptual (visible vs ciego):** en el blind el error era 1 bit (petó/no petó) → 567 peticiones con Intruder para 20 chars. Aquí el error **escupe el valor entero** → **1 petición = contraseña completa**. La misma SQLi es mucho más grave cuando los errores son verbosos.
+
+**Mi mejor hallazgo — la truncación:** `Unterminated string literal started at position 95` NO era fallo mío de sintaxis → la **cookie se cortaba a ~95 caracteres**, partiendo la query. Fix: **acortar el payload** (quitar el valor del trackingId y los espacios). Lección: los payloads tienen límites de longitud; a veces el problema es que no caben, no el SQL.
+
+---
+
+### LAB 2 — Blind SQLi basada en TIEMPO + primer script propio (PostgreSQL) → SOLVED
+**Credenciales:** `administrator` / `ex2ztpz2s1dcpuc7p528`
+**Hito de la semana:** mi primera herramienta de explotación en Python.
+
+**Técnica — el reloj como único oráculo:** la app no devuelve datos, ni errores, ni cambia de contenido. Lo ÚNICO observable es el TIEMPO. Se fuerza un `pg_sleep` condicional: si la condición es verdadera, la respuesta tarda.
+`'%3BSELECT CASE WHEN (<condición>) THEN pg_sleep(N) ELSE pg_sleep(0) END FROM users--`
+- `IF...THEN` NO existe en PostgreSQL → **`CASE WHEN`**.
+- Entrega **apilada** con `;` → en la cookie va como **`%3B`** (porque `;` separa cookies).
+- **Confirmar primero** con una condición segura-verdadera (`username='administrator'`): si eso tarda, el canal funciona. Si pruebas directamente `SUBSTRING...='a'` y el 1er char no es 'a', verás pg_sleep(0) instantáneo y creerás que "no va" cuando en realidad te dice "no es la a".
+
+**Lección — el tiempo es un oráculo RUIDOSO:** en Intruder aparecieron fantasmas (7455ms ambiguo; 16182ms con Length 108 = anómalo, un error, no un sleep limpio). Reglas:
+1. **Delay generoso** (muy por encima del ruido de red).
+2. **Reconfirmar los aciertos**: un hit real vuelve a tardar; el ruido no se repite.
+
+**El salto de verdad — dejé de USAR herramientas y empecé a CONSTRUIRLAS:** Intruder Community + sleeps = **+1 hora** con el estrangulamiento. Mi script en Python = **3 minutos**.
+- **venv**: macOS/Homebrew da `externally-managed-environment` → `python3 -m venv venv` + `source venv/bin/activate` + `pip install requests`. (Entorno aislado = buena costumbre de dev.)
+- Mido el tiempo con `time.perf_counter()` alrededor de la petición.
+- `es_hit()` **reconfirma** el positivo → antídoto directo al ruido.
+- `break` al primer acierto por posición → no malgasto peticiones.
+- Mi perfil de dev deja de ser secundario: es la ventaja. Donde un pentester sin base se estanca, yo escribo el exploit.
+
+---
+
+### Mapa de exfiltración SQLi — COMPLETO
+✅ UNION · ✅ booleana ciega · ✅ error ciego (500/200) · ✅ error visible · ✅ time-based
+
+### Reflexión AppSec (a mi trabajo .NET) — las dos lecciones del día
+1. **No exponer errores de BBDD al cliente.** Nunca mensajes de error de base de datos, stack traces ni detalles internos en producción → página de error genérica, detalle solo en logs (`UseExceptionHandler` en prod, `UseDeveloperExceptionPage` SOLO en dev). El error verboso es media vulnerabilidad (Lab 1 lo demuestra).
+2. **La defensa de raíz es la consulta parametrizada.** El time-based (Lab 2) prueba que tapar canales de salida no basta: aunque cierres UNION, errores y diferencias de contenido, el reloj siempre queda. Una vez que la inyección existe, ningún "ocultar la salida" te salva. Nunca concatenar input en el SQL.
+
+### Pendiente
+- Terminar lo que queda de SQLi: **OAST / out-of-band** (⚠️ usa Burp Collaborator, que es solo de la Pro → con Community hace falta alternativa tipo interactsh), *SQLi in different contexts*, *second-order*, *How to prevent SQL injection*.
+- Retos del script: **búsqueda binaria** (O(log n) en vez de O(n)) y **paralelismo** con `ThreadPoolExecutor`.
+- **Redo en frío** del lab de Oracle (conditional errors) — miércoles/jueves.
