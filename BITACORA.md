@@ -496,3 +496,35 @@ Lo más inquietante: aun con una app **totalmente muda** (sin salida, sin difere
 - Terminar lo que queda de SQLi: **OAST / out-of-band** (⚠️ usa Burp Collaborator, que es solo de la Pro → con Community hace falta alternativa tipo interactsh), *SQLi in different contexts*, *second-order*, *How to prevent SQL injection*.
 - Retos del script: **búsqueda binaria** (O(log n) en vez de O(n)) y **paralelismo** con `ThreadPoolExecutor`.
 - **Redo en frío** del lab de Oracle (conditional errors) — miércoles/jueves.
+
+### Domingo 18 octubre 2026 — PortSwigger · SQLi con bypass de WAF vía codificación XML
+
+**Lab:** *SQL injection with filter bypass via XML encoding* → **SOLVED**
+**Credenciales:** `administrator` / `ttnk6t1b1cdakj80gd9o`
+**Honestidad:** revisé la solución tras atascarme, pero para **descubrir una herramienta** (`<@hex_entities>` de Hackvertor) que no se puede deducir, no para que me dieran la respuesta. El SQL, el UNION y la concatenación los razoné yo.
+
+### El concepto: explotar el desacuerdo entre capas
+La inyección va en un cuerpo XML (stock check) y hay un WAF que bloquea palabras clave SQL. El bypass:
+1. Codifico las keywords como **entidades hex HTML** (`&#x53;` = 'S'…).
+2. El **WAF** inspecciona el cable, ve solo entidades → no reconoce `SELECT`/`UNION` → pasa.
+3. El **parser XML** decodifica las entidades de vuelta a SQL *después* del WAF.
+4. La **BBDD** ejecuta el SQL ya limpio.
+→ WAF y BBDD leen cosas distintas del mismo mensaje. Esa es la idea de "SQLi en distintos contextos".
+
+### SQL
+`1 UNION SELECT username || '~' || password FROM users`
+- El stock se muestra como **un solo valor** → concateno usuario y contraseña con `||` y un separador `~` para sacar ambos por esa única columna.
+
+### Herramienta: Hackvertor
+- `<@hex_entities>SQL plano<@/hex_entities>` codifica el contenido al enviar.
+- **Cierre `<@/hex_entities>`** (la barra va DESPUÉS del `@`) — mi fallo inicial era `</@...>`.
+- Dentro va texto plano; Hackvertor codifica todo. No pre-codificar a mano.
+- Descubierto de paso: el flujo de **Repeater** (enviar, modificar, reenviar).
+
+### Reflexión AppSec (a mi trabajo .NET)
+Un WAF que filtra por lista de palabras clave **es esquivable** cambiando de codificación o de contexto. No es una defensa de verdad, es un parche. La defensa real sigue siendo: **consulta parametrizada** en la capa de datos, y **normalizar/canonicalizar** la entrada ANTES de validarla (si validas antes de decodificar, validas algo que no es lo que ejecutará la BBDD).
+
+### Pendiente
+- 2 labs de OAST (requieren trial de Pro — sesión dedicada).
+- Second-order SQLi y "How to prevent SQL injection" (cierre del módulo).
+- Redo en frío del Oracle (conditional errors) — mié/jue.
