@@ -1,6 +1,6 @@
 ### Bitácora de Aprendizaje - DevSecOps Lab
 
-### 2026-09-19 · ~4 h
+### 2026-09-19 (sábado) - · ~4 h
 
 -  **Hice:** Instalado OrbStack + trivy/gitleaks/semgrep en el Mac. Levantado
   Juice Shop y crAPI (11 contenedores, todos healthy). Montado el pipeline
@@ -25,7 +25,7 @@
   En /rest/user/whoami el cliente decide qué campos pide con `?fields=`.
   ¿Quién valida eso, el cliente o el servidor?
 
-### 2026-09-21 · ~50 min
+### 2026-09-21 (lunes) — · ~50 min
 
 -  **Hice:** Primer apartado "Fundamentos de Docker" del curso de Platzi. 
 -  **Se rompió:** Nada.
@@ -34,7 +34,7 @@
   trivy, semgrep, terraform y kubectl.  
 -  **Pendiente:** `docker info` tiene un apartado de Security Options.
 
-### 2026-09-22 · ~50 min
+### 2026-09-22 (martes) — · ~50 min
 
 -  **Hice:** Descargar el dotnet en brew, crear la API, y el archivo "Dockerfile" 
 -  **Se rompió:** El build falló (NETSDK1045): mi SDK local es .NET 10 y el
@@ -43,7 +43,7 @@
 -  **Aprendí:** Los comandos básicos de Docker para compilar la imagen(`docker build .`, `images`, `docker build -t nombreImagen:latest .`)  y para eliminar la imagen `docker rmi -f` nombre de la imagen   
 -  **Pendiente:** Nada.
 
-### 2026-09-23 · ~40 min
+### 2026-09-23 (miércoles) — · ~40 min
 
 -  **Hice:** Ejecutar trivy image mi-api:latest, para detectar los CVE críticos y altos. 
 -  **Se rompió:** Trivy cortó al descargar su BD de vulnerabilidades (GOAWAY del  servidor). Reintenté y fue. Lección: el escáner depende de una BD externa; en un pipeline real eso hay que cachearlo.
@@ -54,7 +54,7 @@
            contenedor corre como root.  
 -  **Pendiente:** Nada.
 
-### 2026-09-24 · ~40 min
+### 2026-09-24 (jueves) — · ~40 min
 
 -  **Hice:** Multi-stage build con imagen de runtime y usuario no root. 
 -  **Se rompió:** Nada. 
@@ -65,14 +65,14 @@
            importa de hoy.  
 -  **Pendiente:** Nada.
 
-### 2026-09-25 · ~30 min
+### 2026-09-25 (viernes) — · ~30 min
 
 -  **Hice:** Comparar los CVE de los dos días anteriores y realizar una tabla de comparación en el README del proyecto. 
 -  **Se rompió:** Nada. 
 -  **Aprendí:** Crear tablas en el archivo README del proyecto. 
 -  **Pendiente:** Nada.
 
-### 2026-09-26 · ~3 h
+### 2026-09-26 (sábado) — · ~3 h
 
 -  **Hice:** Integrada la construcción y el escaneo de la imagen en el pipeline.
            5 capas automáticas en cada push. Verde. 
@@ -87,7 +87,7 @@
            los commits pequeños.  
 -  **Pendiente:** Nada.
 
-### 2026-09-28 · ~20 min
+### 2026-09-28 (lunes) — · ~20 min
 
 - **Hice:** Ver los vídeo de Platzi, convertir imagen en servicio web y gestión de imagenes (videos: 8-9)
 - **Se rompió:** Nada.
@@ -99,7 +99,7 @@
 
   - Viaje. Sin sesiones. No es ruptura de cadena: pausa anunciada y retomada.
 
-### 2026-10-05 · ~45 min · vuelta de la pausa
+### 2026-10-05 (lunes) — · ~45 min · vuelta de la pausa
 
 - **Hice:** Clases 8 y 9 de Docker (gestión de contenedores e imágenes).
   Levantado el contenedor de mi API endurecida y accedido a
@@ -128,7 +128,7 @@
     Fallo de lógica de negocio: válido en tipos, imposible en significado.
     Ningún escáner lo detecta. Guardar para la semana 10 (IDOR).
 
-### 2026-10-06 · ~2h15
+### 2026-10-06 (martes) —· ~2h15
 
 - Hice: Vídeos 10-13 de Docker. Creada red propia (lab-net) y volumen con
   nombre (pgdata). Postgres y mi API en la misma red, comunicándose por
@@ -148,7 +148,7 @@
 - Pendiente: El -e POSTGRES_PASSWORD queda en el historial del shell y en
   docker inspect. Comprobarlo mañana.
 
-### 2026-10-07 · ~45 min
+### 2026-10-07 (miércoles) — · ~45 min
 
 - Hice: Escaneo de secretos con trivy sobre mi-api:hardened (limpia) y
   postgres:14 (1 hallazgo). Inspección de imagen vs contenedor.
@@ -167,7 +167,7 @@
 - Pendiente: ¿cómo se pasa entonces una contraseña a un contenedor sin
   que acabe en docker inspect? (Docker secrets, ficheros montados, Key Vault).
 
-### 2026-10-08 · ~2 h
+### 2026-10-08 (jueves) — · ~2 h
 
 - **Hice:** Vídeos 14 a 19 de Docker. **Curso terminado.** Inspeccionadas las
   capas de mi imagen con `docker history`. Primer intento de escribir un
@@ -205,7 +205,7 @@
     Empeora respecto a ayer. Gitleaks debería pillármelo en el pipeline.
     ¿Cómo se hace bien? (.env fuera de Git, Docker secrets, Key Vault).
 
-### 2026-10-09/10 · ~1h30
+### 2026-10-09/10 (viernes/sábado) — · ~1h30
 
 - Hice: docker-compose.yml completo y funcionando. Red, volumen, Postgres
   y mi API levantados con un solo comando.
@@ -238,7 +238,7 @@
 - Mañana sábado: crear cuenta en PortSwigger Web Security Academy y hacer
   el bloque completo de SQL injection. Labs, no solo teoría.
 
-###  2026-10-10 · ~3 h · primer día de PortSwigger / AppSec
+###  2026-10-10 (sábado) — · ~3 h · primer día de PortSwigger / AppSec
 
 - Hice: Teoría de arranque de SQLi + 3 labs resueltos.
   Lab 1 (Apprentice) — Retrieving hidden data
@@ -270,7 +270,7 @@
 - Pendiente: lunes → seguir en UNION. Ya sé que son 3 columnas; toca
   encontrar cuál admite texto y sacar datos de otras tablas.
 
-### 2026-10-12 · ~2h · mañana · UNION completo + OWASP
+### 2026-10-12 (lunes) — · ~2h · mañana · UNION completo + OWASP
 
 - **Hice:** Labs 4, 5 y 6 de SQLi (sección UNION cerrada) + lectura de
   OWASP Top 10 2025: A01 Broken Access Control y A05 Injection.
@@ -311,7 +311,7 @@
     listar tablas y columnas. Dejo de conocer la estructura de antemano y
     aprendo a descubrirla yo.
 
-### Martes 13 octubre 2026 — PortSwigger SQLi · "Examining the database"
+### 2026-10-13 (martes) — PortSwigger SQLi · "Examining the database"
 
 **Tiempo:** ~60 min (de ellos ~45 de atasco antes de pedir ayuda)
 **Lab:** *SQL injection attack, querying the database type and version on MySQL and Microsoft* → **SOLVED**
@@ -339,7 +339,7 @@ Me descargo e instalo **Burp Suite Community** en el Mac. A partir del próximo 
 - Terminar "Examining the database": lab de listar tablas/columnas.
 - Después: labs de Access Control / IDOR (aplazados, no saltados).
 
-### Miércoles 14 octubre 2026 — PortSwigger SQLi · "Listing database contents" (PostgreSQL) · estreno de Burp
+### 2026-10-14 (miércoles) — PortSwigger SQLi · "Listing database contents" (PostgreSQL) · estreno de Burp
 
 **Tiempo:** sesión nocturna, cerrada pasada la medianoche (más larga de lo previsto)
 **Lab:** *SQL injection attack, listing the database contents on non-Oracle databases* → **SOLVED** (login como `administrator`)
@@ -365,7 +365,7 @@ La contraseña estaba en **texto plano** en la tabla — por eso con leerla ya e
 - Afinar el flujo en Burp para no volver a confundir un fallo de render con un resultado vacío.
 - Siguiente bloque de "Examining the database" o pasar a los labs de UNION restantes según toque en la ruta.
 
-### Jueves 15 octubre 2026 — PortSwigger · Blind SQLi con respuestas condicionales
+### 2026-10-15 (jueves) — PortSwigger · Blind SQLi con respuestas condicionales
 
 **Tiempo:** sesión nocturna larga, cerrada ~02:00 (el Intruder estrangulado de la Community tardó lo suyo)
 **Lab:** *Blind SQL injection with conditional responses* → **SOLVED** · **sin mirar la solución**
@@ -400,7 +400,7 @@ Dos cosas: (1) la contraseña estaba **en texto plano** otra vez → hash + salt
 - Idea para desarrollador: reescribir esta extracción como **script en Python con `requests`** — sin el estrangulamiento de la Community y mucho más rápido. Gran ejercicio y muy vendible.
 - Siguiente: blind SQLi basada en **errores** y en **tiempo** (los labs que vienen).
 
-### Viernes 16 octubre 2026 — PortSwigger · Blind SQLi con errores condicionales (Oracle)
+### 2026-10-16 (viernes)  — PortSwigger · Blind SQLi con errores condicionales (Oracle)
 
 **Tiempo:** sesión nocturna larga, cerrada ~02:15
 **Lab:** *Blind SQL injection with conditional errors* → **SOLVED** · login como `administrator`
@@ -440,7 +440,7 @@ Lo más inquietante: aun con una app **totalmente muda** (sin salida, sin difere
 - **Rehacer este lab en frío** (instancia nueva, sin solución).
 - Siguiente: blind basada en **tiempo** (cuando no hay ni error visible — `dbms_pipe.receive_message` en Oracle, etc.).
 
-### Sábado 17 – domingo 18 octubre 2026 (madrugada) — PortSwigger · SQLi: error visible + time-based (+ primer script propio)
+### 2026-10-17/18 (sábado/domingo) — PortSwigger · SQLi: error visible + time-based (+ primer script propio)
 
 **Resumen del día:** dos labs de SQLi resueltos. Con ellos cierro el **mapa completo** de canales de exfiltración. Y monté mi primera herramienta de explotación en Python.
 
@@ -497,7 +497,7 @@ Lo más inquietante: aun con una app **totalmente muda** (sin salida, sin difere
 - Retos del script: **búsqueda binaria** (O(log n) en vez de O(n)) y **paralelismo** con `ThreadPoolExecutor`.
 - **Redo en frío** del lab de Oracle (conditional errors) — miércoles/jueves.
 
-### Domingo 18 octubre 2026 — PortSwigger · SQLi con bypass de WAF vía codificación XML
+### 2026-10-18 (domingo) —  PortSwigger · SQLi con bypass de WAF vía codificación XML
 
 **Lab:** *SQL injection with filter bypass via XML encoding* → **SOLVED**
 **Credenciales:** `administrator` / `ttnk6t1b1cdakj80gd9o`
@@ -529,7 +529,7 @@ Un WAF que filtra por lista de palabras clave **es esquivable** cambiando de cod
 - Second-order SQLi y "How to prevent SQL injection" (cierre del módulo).
 - Redo en frío del Oracle (conditional errors) — mié/jue.
 
-### Lunes 19 octubre 2026 — PortSwigger · Access Control (4 labs) — arranque del módulo
+### 2026-10-19 (lunes) — PortSwigger · Access Control (4 labs) — arranque del módulo
 
 **Tema:** Access control / Broken Access Control (OWASP A01). 4 labs resueltos, el último sin mirar solución.
 **Hilo conductor del día:** todos son el servidor **confiando en algo que controla el cliente**. El control de acceso se decide en el servidor, sobre datos de confianza, no sobre lo que manda el navegador.
