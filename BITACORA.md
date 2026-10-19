@@ -528,3 +528,32 @@ Un WAF que filtra por lista de palabras clave **es esquivable** cambiando de cod
 - 2 labs de OAST (requieren trial de Pro — sesión dedicada).
 - Second-order SQLi y "How to prevent SQL injection" (cierre del módulo).
 - Redo en frío del Oracle (conditional errors) — mié/jue.
+
+### Lunes 19 octubre 2026 — PortSwigger · Access Control (4 labs) — arranque del módulo
+
+**Tema:** Access control / Broken Access Control (OWASP A01). 4 labs resueltos, el último sin mirar solución.
+**Hilo conductor del día:** todos son el servidor **confiando en algo que controla el cliente**. El control de acceso se decide en el servidor, sobre datos de confianza, no sobre lo que manda el navegador.
+
+### Lab 1 — Unprotected admin functionality
+Panel de admin sin protección, en `/administrator-panel`. Lo descubrí en **`/robots.txt`**.
+- Lección: **oscuridad ≠ control de acceso.** Y `robots.txt` delata justo las rutas que quieres "ocultar".
+
+### Lab 2 — Unprotected admin (URL impredecible)
+La URL (`/admin-kqpdte`) estaba expuesta en el **JavaScript del cliente** (un `if (admin)` que renderiza el enlace).
+- Lección: **todo lo que llega al navegador es público.** La lógica del cliente es UX, no seguridad. Renderizar solo-para-admin no oculta el endpoint.
+
+### Lab 3 — Admin identificado por cookie forjable
+Logueado como `wiener:peter`, con el inspector cambié la cookie `Admin` de `false` a `true` → panel habilitado → borré a carlos.
+- Lección: el servidor **confiaba en una cookie editable** para decidir el rol. Decisión de autorización sobre dato controlado por el cliente = roto.
+- Defensa: el rol se determina en servidor desde la identidad autenticada (sesión firmada/cifrada), nunca desde una cookie que el usuario puede tocar.
+
+### Lab 4 — Rol modificable en el perfil (mass assignment) — *sin solución*
+El panel pedía `roleid` 2. En el endpoint de cambiar email, mandé la petición a Repeater y añadí un campo que no estaba:
+`{"email":"wiener@normal-user.net", "roleid": 2}`
+→ respuesta con `"roleid": 2` → panel de admin → borré a carlos.
+- Lección: **mass assignment / over-posting.** El endpoint vincula TODO el cuerpo al objeto usuario, incluido `roleid`, que el usuario no debería poder tocar. Escalada de privilegios metiendo un campo de más.
+
+### Reflexión AppSec (a mi trabajo .NET) — la del día
+- **Autorización SIEMPRE en el servidor, por rol, sobre la identidad autenticada** (`[Authorize(Roles="Admin")]` en el endpoint), nunca sobre cookies, JS ni URLs "raras".
+- **Mass assignment:** usar **DTOs** que expongan solo los campos editables (email), NUNCA enlazar la entidad directamente desde el body. Es exactamente el "DTOs frente a mass assignment" de mi proyecto — hoy lo he visto explotado en vivo.
+- Nunca poner rutas sensibles en `robots.txt`.
