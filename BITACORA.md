@@ -570,3 +570,23 @@ El panel pedía `roleid` 2. En el endpoint de cambiar email, mandé la petición
 **Concepto:** control de acceso en la capa equivocada = **desincronización front-end/back-end**. El proxy filtra por ruta; el back-end reconstruye la URL desde una cabecera que controla el atacante. Dos capas que leen cosas distintas del mismo mensaje (mismo patrón que el bypass XML con Hackvertor).
 
 **Defensa (.NET):** autorizar SIEMPRE en el back-end, por endpoint y por rol; no delegar el control en el proxy/front-end; no confiar en cabeceras cliente (`X-Original-URL`/`X-Rewrite-URL`) para enrutar o autorizar.
+
+### 2026-10-22 (jueves) — PortSwigger · Access Control (3 labs)
+
+**Resumen:** 1 bypass de control por método HTTP + 2 sabores de IDOR (horizontal).
+**Patrón del día:** *oscuridad ≠ control de acceso*, en todas sus formas — y el control tiene que vivir en el **back-end**, no en el borde ni en "ids difíciles".
+
+### 1 · Method-based access control can be circumvented  *(2 días: ~1h45 el miércoles + cierre hoy)*
+- **Técnica:** el front-end restringe `POST /admin-roles` a admins, pero no otros métodos. Con cookie de wiener: `POST`→"Unauthorized"; `POSTX`→"missing parameter" (diagnóstico: ya pasé el front-end, el back-end no lee el body); convertir a `GET` (Burp → "Change request method") mueve los params a la query → `GET /admin-roles?username=wiener&action=upgrade` → wiener a admin.
+- **Lecciones:** la sesión también es una variable a manipular (cambiar la cookie al usuario de bajo privilegio). Dónde viven los params depende del método (POST→body, GET→query). Honestidad: revisé solución + vídeo tras 1h45.
+- **Defensa (.NET):** autorizar en el back-end por rol, **independiente del método HTTP**; tratar métodos no estándar como no permitidos.
+
+### 2 · IDOR — escalada HORIZONTAL (id entero)
+- **Técnica:** en `GET /my-account?id=wiener` cambié `id` a `carlos` → cuenta de carlos con su API key, sin comprobar propiedad.
+- **Concepto:** referencia directa a objeto controlada por el cliente sin autorización a nivel de objeto. **OWASP API #1 — BOLA.**
+- **Defensa (.NET):** verificar dueño antes de devolver (`if (recurso.OwnerId != usuarioActual.Id) Forbid()`).
+
+### 3 · IDOR con GUIDs (horizontal)
+- **Técnica:** el `id` es un GUID no adivinable. Encontré el GUID de carlos **filtrado en un comentario**, lo puse en mi `my-account` → API key.
+- **Lección:** un identificador impredecible NO es control de acceso — es oscuridad: el GUID se filtra donde se referencia al usuario, y aunque no se filtrara, el servidor sigue sin comprobar propiedad. GUID = defensa en profundidad, no la defensa.
+- **Defensa (.NET):** autorización a nivel de objeto; no exponer GUIDs ajenos sin necesidad.
