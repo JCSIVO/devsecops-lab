@@ -557,3 +557,16 @@ El panel pedía `roleid` 2. En el endpoint de cambiar email, mandé la petición
 - **Autorización SIEMPRE en el servidor, por rol, sobre la identidad autenticada** (`[Authorize(Roles="Admin")]` en el endpoint), nunca sobre cookies, JS ni URLs "raras".
 - **Mass assignment:** usar **DTOs** que expongan solo los campos editables (email), NUNCA enlazar la entidad directamente desde el body. Es exactamente el "DTOs frente a mass assignment" de mi proyecto — hoy lo he visto explotado en vivo.
 - Nunca poner rutas sensibles en `robots.txt`.
+
+### 2026-10-21 (miércoles) — PortSwigger · Access Control: bypass por X-Original-URL
+*(arrastrado del 2026-10-20: 1h30 el martes + cierre hoy)*
+
+**Lab:** URL-based access control circumvented (front-end bloquea `/admin`) → **SOLVED**, sin solución.
+**Técnica:** el back-end soporta la cabecera `X-Original-URL`. Pido una ruta permitida y sobrescribo la ruta real:
+`GET /?username=carlos` + `X-Original-Url: /admin/delete` → borra a carlos.
+- El `username` va en la **query de la petición real** (X-Original-URL solo cambia la ruta, no los parámetros). De ahí el "missing parameter username" hasta que lo moví.
+- Erratas que me costaron: faltaba la `/` y se duplicó `HTTP/2` en la línea de petición. Lección: leer el request entero, carácter a carácter.
+
+**Concepto:** control de acceso en la capa equivocada = **desincronización front-end/back-end**. El proxy filtra por ruta; el back-end reconstruye la URL desde una cabecera que controla el atacante. Dos capas que leen cosas distintas del mismo mensaje (mismo patrón que el bypass XML con Hackvertor).
+
+**Defensa (.NET):** autorizar SIEMPRE en el back-end, por endpoint y por rol; no delegar el control en el proxy/front-end; no confiar en cabeceras cliente (`X-Original-URL`/`X-Rewrite-URL`) para enrutar o autorizar.
