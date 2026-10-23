@@ -590,3 +590,22 @@ El panel pedía `roleid` 2. En el endpoint de cambiar email, mandé la petición
 - **Técnica:** el `id` es un GUID no adivinable. Encontré el GUID de carlos **filtrado en un comentario**, lo puse en mi `my-account` → API key.
 - **Lección:** un identificador impredecible NO es control de acceso — es oscuridad: el GUID se filtra donde se referencia al usuario, y aunque no se filtrara, el servidor sigue sin comprobar propiedad. GUID = defensa en profundidad, no la defensa.
 - **Defensa (.NET):** autorización a nivel de objeto; no exponer GUIDs ajenos sin necesidad.
+
+### 2026-10-23 (viernes) — PortSwigger · Access Control: IDOR (2 labs)  *(cerrado ~00:45)*
+
+**Tema:** IDOR / id controlado por parámetro, dos variantes de fuga de datos.
+
+### 1 · User ID controlled by request parameter — data leakage in redirect
+- **Técnica:** cambié `wiener`→`carlos` en la petición. La app redirige (no autorizado a ver la página), pero el **cuerpo de la respuesta** ya contiene la API key antes del redirect (visible en Burp).
+- **Lección:** un redirect NO protege nada. El servidor generó y envió el dato y luego redirigió. El control debe impedir que el dato se genere/devuelva, no mover el navegador después.
+
+### 2 · User ID controlled by request parameter — password disclosure
+- **Técnica:** cambié `id` a `administrator`. La contraseña venía pre-rellenada en un campo `type=password` → en claro en el HTML. La leí del código fuente → login como admin → borré a carlos.
+- **Clave obtenida:** `ufgplttmyllpqp33v6i0`
+- **Me costó / aprendí:** llegaba a ver la password pero no validaba el lab → era un **espacio en blanco** pegado al copiar. Ojo al copiar tokens.
+- **Lección:** el enmascarado (`type=password`) es solo visual; el valor va en claro. Una contraseña nunca debe enviarse al cliente.
+
+### Defensa (.NET) — común a los dos
+- Autorizar **antes de generar/devolver** el dato (no redirigir después de haberlo mandado).
+- **Nunca** enviar contraseñas al cliente; no pre-rellenar campos de password. Almacenar con hash; no devolver.
+- Autorización a nivel de objeto sobre el `id` de la petición (BOLA / OWASP API #1).
