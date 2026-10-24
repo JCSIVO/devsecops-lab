@@ -609,3 +609,25 @@ El panel pedía `roleid` 2. En el endpoint de cambiar email, mandé la petición
 - Autorizar **antes de generar/devolver** el dato (no redirigir después de haberlo mandado).
 - **Nunca** enviar contraseñas al cliente; no pre-rellenar campos de password. Almacenar con hash; no devolver.
 - Autorización a nivel de objeto sobre el `id` de la petición (BOLA / OWASP API #1).
+
+### 2026-10-24 (sábado) — PortSwigger · Access Control: cierre del módulo (2 labs)
+
+**Access Control COMPLETO** — primer módulo del núcleo AppSec.
+
+### 1 · Multi-step process with no access control on one step
+- **Técnica:** el cambio de rol tiene varios pasos; el de confirmación NO re-verifica autorización. Envié ese paso con cookie de wiener → me promocioné.
+- **Honestidad:** miré la solución tras 30 min (orden de las cookies).
+- **Lección:** cada paso de un flujo multi-paso debe comprobar autorización; no asumir que el paso intermedio es seguro por venir del primero.
+
+### 2 · Referer-based access control
+- **Técnica:** el acceso a `/admin-roles` se controla por la cabecera `Referer`. Replay con cookie de wiener + `Referer: .../admin` + `username=wiener` → admin.
+- **Lección:** el `Referer` lo pone el cliente → falsificable. Controlar acceso por una cabecera cliente es roto. Misma raíz que X-Original-URL y method-based.
+
+### Defensa (.NET) — resumen del módulo
+Autorización en el **back-end**, por rol y a nivel de objeto, **en cada acción y cada paso**, independiente de método, cabeceras (`Referer`, `X-Original-URL`), cookies e ids. Nada de oscuridad ni de confiar en el front-end.
+
+### (extra) SQLi — completar pendientes + redo en frío
+Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden data, versión Oracle, listing Oracle, time delays). Mismas técnicas ya dominadas; sin novedad, solo cierre.
+- **Redo en frío — Blind SQLi conditional errors (Oracle): resuelto solo.** Confirma que la técnica está aprendida (era el pendiente). Oráculo = status 500 (error) vs 200.
+- **Reincidencia a fichar:** las **comillas tipográficas** (`’ ‘`) volvieron a romper el payload → siempre comillas rectas `'`. (2ª vez.)
+- **Estado SQLi:** módulo completo **salvo los 2 de OAST** (necesitan Burp Collaborator / Pro → semana de trial).
