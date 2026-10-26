@@ -631,3 +631,20 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 - **Redo en frío — Blind SQLi conditional errors (Oracle): resuelto solo.** Confirma que la técnica está aprendida (era el pendiente). Oráculo = status 500 (error) vs 200.
 - **Reincidencia a fichar:** las **comillas tipográficas** (`’ ‘`) volvieron a romper el payload → siempre comillas rectas `'`. (2ª vez.)
 - **Estado SQLi:** módulo completo **salvo los 2 de OAST** (necesitan Burp Collaborator / Pro → semana de trial).
+
+### 2026-10-26 (lunes) — Authentication
+
+### Lab: Username enumeration via different responses ✅
+- **Tooling gotcha (Mac/RTF):** el wordlist llegó sucio a Burp — cabecera `\outl0\strokewidth0...`
+  y una `\` al final de cada línea. Causa: pasó por rich text (TextEdit/copia con estilo) en vez de
+  texto plano. Lección reforzada: *vacío ≠ negativo* — 0 aciertos habría sido lista podrida, no
+  ausencia de usuarios. Arreglo: lista en texto plano + Clear y re-pegar.
+- **Concepto:** enumeración en 2 fases, NO fuerza bruta combinada. (1) password fija, variar user,
+  buscar la respuesta *diferente*; (2) con el user válido, variar password → 302. ~200 peticiones,
+  no 10.100 (el Cluster bomb estaba sobredimensionado; aquí va **Sniper**, una lista por posición).
+- **Ruido a vigilar:** un timeout de Burp Community desincroniza el oráculo — una respuesta puede
+  desmarcarse por *lenta*, no por *distinta*. Reláncala antes de creerla (igual que el time-based SQLi).
+- **Credenciales:** user `au` / pass `112233`.
+- **Defensa en .NET:** error genérico idéntico (mismo texto + status) para user-inexistente y
+  password-incorrecta; tiempo de respuesta constante para evitar timing oracle; rate limiting + lockout.
+- **Resultado:** resuelto. Primera técnica de enumeración de usuarios en el banco.
