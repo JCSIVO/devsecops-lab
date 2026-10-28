@@ -648,3 +648,26 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 - **Defensa en .NET:** error genérico idéntico (mismo texto + status) para user-inexistente y
   password-incorrecta; tiempo de respuesta constante para evitar timing oracle; rate limiting + lockout.
 - **Resultado:** resuelto. Primera técnica de enumeración de usuarios en el banco.
+
+### 2026-10-27 (martes) — Authentication
+
+### Lab: Username enumeration via response timing ⏳ → (resuelto el 28)
+- Toda la sesión atascado sin solventarlo. Me topé primero con la defensa: "too many incorrect login
+  attempts... 30 minute(s)" = rate limiting / lockout por IP. (Olvidé registrar la bitácora este día.)
+
+### 2026-10-28 (miércoles) — Authentication
+
+### Lab: Username enumeration via response timing ✅
+- **Dos obstáculos encadenados, resueltos juntos en una sola request:**
+  1. **Lockout por IP** → bypass con cabecera `X-Forwarded-For` (un valor distinto por intento). El server
+     confía en una cabecera que controla el cliente = mismo patrón que Access Control (`Admin=true` en cookie).
+     *Investigación legítima:* el nombre de la cabecera y su uso en Burp no se deducen; el razonamiento (variar
+     lo que me identifica) sí era mío.
+  2. **Oráculo = tiempo** → password muy larga (100+ chars) para amplificar el delta. El server solo hashea
+     si el user existe → user válido tarda más. Reloj como oráculo (= time-based blind SQLi).
+- **Credenciales:** `aix` / `thunder`.
+- **Defensa en .NET:** (1) no confiar en `X-Forwarded-For` para rate limiting salvo detrás de proxy propio
+  y con allowlist; contar por cuenta además de por IP. (2) tiempo constante: verificar siempre contra un
+  hash dummy aunque el user no exista (evita el short-circuit que crea el timing oracle). (3) mensaje de
+  error genérico idéntico.
+- **Meta:** protocolo de atasco bien aplicado — investigar la herramienta (XFF) ≠ que te den la respuesta.
