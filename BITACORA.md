@@ -671,3 +671,23 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   hash dummy aunque el user no exista (evita el short-circuit que crea el timing oracle). (3) mensaje de
   error genérico idéntico.
 - **Meta:** protocolo de atasco bien aplicado — investigar la herramienta (XFF) ≠ que te den la respuesta.
+
+### 2026-10-29 (jueves) — Authentication
+
+### Lab: Broken brute-force protection, IP block ✅
+- **El bug es de lógica, no de fuerza:** la protección bloquea tras 3 fallos, pero **el contador se
+  resetea con cada login exitoso**. Patrón explotado: fallo, fallo, [login válido con el user de ejemplo],
+  fallo, fallo, [login válido]... nunca se llega al techo de 3, y se recorre el diccionario de `carlos`
+  a razón de 2 intentos por ciclo.
+- **Diagnóstico diferencial (los descartes que ayudaron):**
+  - `X-Forwarded-For` / `X-Real-IP` → **sin efecto**. Lección: este lockout NO cuenta por IP sino por
+    **cuenta de usuario**. (Ayer XFF funcionó porque aquel iba por IP; hoy no. El fallo me dijo dónde
+    NO estaba la lógica.)
+  - Rate limit de concurrencia a 1 → tampoco. Confirmó que el problema no era de velocidad.
+- **Credenciales:** `carlos` / `qazwsx`.
+- **Defensa en .NET:** el contador de intentos fallidos **no debe resetearse con un login exitoso de
+  OTRA cuenta/sesión**; contar fallos por cuenta objetivo de forma persistente (y por IP a la vez).
+  Un lockout con cooldown temporal (no reseteable por un acierto intercalado) cierra este hueco.
+  Considerar bloqueo progresivo + alerta tras N fallos.
+- **Meta:** resuelto con patrón propio tras 45 min; la solución oficial me pareció menos efectiva que la
+  mía → criterio propio emergiendo. Protocolo de atasco bien aplicado.
