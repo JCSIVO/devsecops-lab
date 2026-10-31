@@ -691,3 +691,56 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   Considerar bloqueo progresivo + alerta tras N fallos.
 - **Meta:** resuelto con patrón propio tras 45 min; la solución oficial me pareció menos efectiva que la
   mía → criterio propio emergiendo. Protocolo de atasco bien aplicado.
+
+### 2026-10-30 (viernes) — Authentication
+
+### Lab: Username enumeration via account lock ⏳ (en curso)
+- 1h 45min sobre el lab sin dar con el montaje correcto. Atascado en cómo acumular intentos sobre la
+  misma cuenta para disparar el lockout. Cerrado sin resolver; retomado el 31.
+- (Nota: día sin cierre, pero sesión real. Cuenta.)
+
+### 2026-10-31 (sábado) — Authentication
+
+### Lab: Username enumeration via account lock ✅
+- **Oráculo = account lockout.** Un usuario que EXISTE se bloquea tras N fallos y cambia su respuesta
+  ("too many incorrect login attempts"); uno inexistente nunca se bloquea → no hay cuenta que bloquear.
+  Ese cambio de respuesta delata al usuario válido.
+- **Montaje correcto (lo que me costó):** ataque **Sniper** sobre una posición en `username`, password
+  fijo e inválido. Lista = cada usuario candidato repetido en bloque seguido (necesario para acumular
+  intentos sobre la MISMA cuenta). Ordenar resultados por **Length** → el bloque que se desmarca es el user.
+- **Errores de los que aprendí:**
+  - Primer intento con lista de solo 2 usuarios (carlos, root) → variedad a cero. Repeticiones ≠ variedad:
+    las repeticiones disparan el bloqueo, la variedad de usuarios encuentra cuál tiene cuenta.
+  - **El umbral era 4, no 3.** Asumí el número; el servidor mandaba. Lección madre: ante un contador,
+    pon margen holgado (8 rep.) y deja que el comportamiento revele el umbral. Con 3 no habría saltado.
+  - XFF/X-Real-IP no aplicaban: aquí el lockout es por CUENTA, no por IP.
+- **Credenciales:** `af` / `123qwe`.
+- **Defensa en .NET:** account lockout está bien como defensa, pero NO debe filtrar enumeración →
+  mismo mensaje genérico aunque la cuenta esté bloqueada (no revelar "cuenta bloqueada" vs "credenciales
+  inválidas"); tiempo de respuesta constante; combinar con lockout por IP y CAPTCHA progresivo.
+- **Meta:** ~2 días (vie 1h45 + sáb). El oráculo vive en el cambio de respuesta según estado interno
+  del servidor (existe / bloqueada), igual que en los blind SQLi.
+
+### Lab: Broken brute-force protection, multiple credentials per request ✅ (EXPERT)
+- **El fallo de diseño real:** el endpoint acepta el campo `password` como **array JSON**, y el server
+  itera todas las claves de la lista dentro de UNA sola petición. El contador de bloqueo cuenta *requests*,
+  no *credenciales dentro del request* → un diccionario entero viaja en 1 petición y nunca cruza el umbral.
+  Payload: `{ "username": "carlos", "password": ["123456", "...", "pepper", ...] }`.
+- **Resuelto por DOS vías (ambas al mismo resultado):**
+  1. **Array JSON** con todas las claves candidatas en el campo `password` → el server las prueba todas
+     en una request. (La que explota el bug de diseño.)
+  2. **Reinicio del contador:** intercalando un usuario/clave aleatorios cada 3 intentos para no tocar
+     el umbral de bloqueo y recorrer el diccionario. (Rodeo artesanal.)
+  - Las dos convergieron en la misma credencial → confirmación cruzada del hallazgo (misma disciplina
+    de reconfirmar positivos que en el time-based SQLi).
+- **Credenciales:** `carlos` / `pepper`.
+- **Defensa en .NET:** model binding estricto — `password` debe ser `string`, nunca una colección;
+  rechazar/normalizar un escalar que llega como array. Validar el esquema del body (un solo par
+  usuario/contraseña por petición). Contar intentos por credencial probada, no por request.
+- **Meta:** modo **expert** resuelto por las dos vías; confirmación cruzada del resultado.
+
+### 🏁 Bloque cerrado: Vulnerabilities in password-based login
+- 7 labs completados: enumeración (different / subtly different / timing) + brute-force protection
+  (IP block / broken IP block / account lock / multiple credentials per request).
+- Hilo conductor de todo el bloque: **el servidor responde distinto según su estado interno**, y las
+  defensas (lockout, rate limit) fallan cuando su LÓGICA es rompible, no su fuerza.
