@@ -744,3 +744,36 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   (IP block / broken IP block / account lock / multiple credentials per request).
 - Hilo conductor de todo el bloque: **el servidor responde distinto según su estado interno**, y las
   defensas (lockout, rate limit) fallan cuando su LÓGICA es rompible, no su fuerza.
+
+### 2026-11-01 (domingo) — Authentication · 2FA
+
+### Lab: 2FA simple bypass ✅ (Apprentice)
+- **El bug:** el 2FA no se fuerza en el back-end. Tras introducir usuario/contraseña vas a la pantalla
+  del código, pero si navegas directo a una página post-login (/my-account) SIN enviar el código, el
+  server deja entrar igual. La segunda verificación no bloquea el acceso.
+- **Defensa en .NET:** el estado "2FA pendiente" debe bloquear TODO recurso autenticado hasta
+  completarse; no basta con mostrar la pantalla del código — el back-end rechaza cualquier recurso
+  protegido mientras el 2º factor no se valide.
+
+### Lab: 2FA broken logic ✅ (Practitioner)
+- **Dos capas en este lab:**
+  1. **Fallo de lógica:** el código 2FA y la identidad verificada viven en parámetros separados
+     (`verify` en cookie + `mfa-code`) que el back-end NO cruza. Forjando `verify=carlos` se ataca la
+     cuenta de Carlos sin ser él. Patrón: desincronización entre dos datos que el servidor lee por
+     separado (= familia Access Control, "el server confía en algo que controla el cliente").
+  2. **Fuerza bruta del código:** al no tener acceso al email de Carlos, el código de 4 dígitos
+     (0000–9999) hay que sacarlo por fuerza bruta sobre `verify=carlos`.
+- **Mecánica clave aprendida (lo que me costó anoche):** forzar `verify=carlos` desde el PRIMER login
+  rompe el estado de la propia sesión → logout. Hay que hacer login honesto de wiener primero y cambiar
+  `verify` solo en el paso del código. Repeater no encadena el Set-Cookie automáticamente: hay que
+  sincronizar sesión + código del mismo flujo a mano.
+- **Herramienta — el salto de nivel:** Burp Community estrangula Intruder → fuerza bruta inviable ahí.
+  **Resuelto con script propio de Python 3** recorriendo 0000–9999 contra /login2 con verify=carlos.
+  De usar herramientas a construirlas, otra vez (igual que en SQLi).
+- **Código obtenido:** `1242`.
+- **Defensa en .NET:** (a) el mfa-code DEBE estar vinculado a la cuenta de la sesión — nunca aceptar un
+  código verificado contra una identidad distinta de la autenticada en el 1er factor. (b) Rate limiting /
+  lockout sobre el endpoint del código: 4 dígitos sin límite de intentos = 10.000 combinaciones triviales.
+  (c) Caducidad corta del código y un solo uso.
+- **Meta:** concepto resuelto anoche (sáb/dom madrugada), ejecución + brute-force cerrada hoy. El redo en
+  frío de este conviene (la coreografía de peticiones fue lo costoso, no el concepto).
