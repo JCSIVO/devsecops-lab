@@ -777,3 +777,28 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   (c) Caducidad corta del código y un solo uso.
 - **Meta:** concepto resuelto anoche (sáb/dom madrugada), ejecución + brute-force cerrada hoy. El redo en
   frío de este conviene (la coreografía de peticiones fue lo costoso, no el concepto).
+
+### 2026-11-03 (martes) — Authentication · 2FA
+
+### Lab: 2FA bypass using a brute-force attack ✅ (cierra lo de ayer)
+- **Resuelto con script propio de Python 3** (Burp Community estrangula Intruder → fuerza bruta inviable
+  ahí). Código encontrado: `0832`, confirmado con oráculo estricto (`status=302, loc=/my-account?id=carlos`).
+- **La causa raíz del "código incorrecto" de ayer era el ritmo, no la lógica:** `sleep(0.04)` saturaba
+  el lab → ráfagas de HTTP 500. La rama de error contaba el 500 como "código incorrecto" y avanzaba,
+  saltándose el código bueno. Fix doble: (a) `sleep` 0.04 → 0.25 (deja de petar el server); (b) tratar
+  **500 = reintentar el mismo número**, nunca como incorrecto. Con eso, 0832 apareció a la primera pasada.
+- **Oráculo estricto = clave.** Éxito SOLO si `302 + /my-account` (no "no aparece el error"). Evitó el
+  falso positivo que ayer cantaba "encontrado" al primer intento. *Verde ≠ limpio* aplicado y resuelto.
+- **Arquitectura final del script:** una sola `requests.Session()`; `login()` abre la ventana 2FA;
+  csrf FIJO leído una vez (fuera del bucle); bucle secuencial (sin hilos); re-login + nuevo csrf al
+  detectar deslogueo; 500 reintenta; prints de diagnóstico (status/location/cookies).
+- **Meta — lo que de verdad aprendí (2 días):** no fue "resolver un lab", fue **depurar una herramienta
+  propia** cazando 4 bugs: sesión-por-intento, hilos contraproducentes, csrf dentro del bucle (→500),
+  oráculo por descarte. Y cuándo NO paralelizar. Trabajo de ingeniero.
+- **Defensa en .NET:** código 2FA de 4 dígitos SIN rate limiting = 10.000 combinaciones triviales →
+  throttling/lockout estricto en el endpoint del código, caducidad corta y un solo uso. El deslogueo
+  tras N fallos ayuda pero no basta si se puede re-loguear en bucle sin fricción (CAPTCHA/backoff).
+
+### 🏁 Sub-bloque cerrado: Vulnerabilities in multi-factor authentication (3/3)
+- 2FA simple bypass · 2FA broken logic · 2FA bypass via brute-force. MFA completo.
+- Siguiente en la secuencia: **Vulnerabilities in other authentication mechanisms** (5 labs).
