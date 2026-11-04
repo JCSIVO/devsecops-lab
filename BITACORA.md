@@ -802,3 +802,31 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 ### 🏁 Sub-bloque cerrado: Vulnerabilities in multi-factor authentication (3/3)
 - 2FA simple bypass · 2FA broken logic · 2FA bypass via brute-force. MFA completo.
 - Siguiente en la secuencia: **Vulnerabilities in other authentication mechanisms** (5 labs).
+
+### 2026-11-04 (miércoles) — Authentication · Other mechanisms
+
+### Lab: Brute-forcing a stay-logged-in cookie ✅
+- **Esquema de la cookie descifrado:** `stay-logged-in = base64( usuario : md5(contraseña) )`.
+  Decodificado con Hackvertor; confirmado que md5("peter") = 51dc30dd...c770 (la contraseña de wiener).
+- **Concepto clave — los hashes NO se decodifican/revierten:** son de una sola dirección. Se rompen
+  probando candidatas HACIA ADELANTE (md5 de cada palabra) hasta que una coincide. Hackvertor no
+  "desencripta" MD5; yo confirmé la receta hasheando un valor conocido y comparando.
+- **Ataque (Intruder Sniper sobre GET /my-account?id=carlos):**
+  - Posición §§ sobre el valor de la cookie `stay-logged-in` (NO sobre el password del login — el bug
+    está en la cookie persistente forjable, no en el login).
+  - Payload Processing (3 reglas anidadas): Hash MD5 → Add Prefix `carlos:` → Base64-encode.
+    Construye base64(carlos:md5(candidata)) por cada palabra del diccionario.
+  - Diccionario de ~100 contraseñas comunes.
+- **El obstáculo final (lo que me costó 2h):** mientras la petición llevara mi cookie `session` de
+  wiener, el server me identificaba por ELLA e ignoraba la stay-logged-in forjada → todas las respuestas
+  idénticas (200/3363, o 302 tras logout). **Fix: quitar `; session=...` de la línea Cookie del ataque**,
+  dejando SOLO stay-logged-in. Entonces el server se apoya en la cookie atacada.
+  → Patrón madre: el server confía en el dato que yo controlo; hay que controlar CUÁL dato le llega.
+- **Oráculo:** cookie válida = 200 + longitud distinta (req 70: 200/3450); inválidas = 302/173.
+  La contraseña de carlos es el payload de esa fila.
+- **Defensa en .NET:** NUNCA construir un token "recordarme" con un esquema predecible/forjable
+  (user:md5(pass) es reversible por diccionario y encima filtra que el hash es de la contraseña).
+  Usar tokens aleatorios opacos (criptográficamente seguros) almacenados server-side y asociados a la
+  sesión; nunca derivables de datos del usuario. Rate limiting también en validación de cookies persistentes.
+- **Burp aprendido:** Payload Processing con reglas encadenadas (hash + prefix + encode) = alternativa
+  limpia a anidar Hackvertor a mano. Nueva herramienta en el banco.
