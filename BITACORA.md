@@ -830,3 +830,36 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   sesión; nunca derivables de datos del usuario. Rate limiting también en validación de cookies persistentes.
 - **Burp aprendido:** Payload Processing con reglas encadenadas (hash + prefix + encode) = alternativa
   limpia a anidar Hackvertor a mano. Nueva herramienta en el banco.
+
+### 2026-11-05 (jueves) — Authentication · Other mechanisms
+
+### Lab: Offline password cracking ✅ (Practitioner)
+- **Tres técnicas encadenadas:** stored XSS → exfiltración de cookie → cracking offline de MD5.
+- **1. Punto de inyección (error inicial):** probé meter el exploit en `?id=` de /my-account — NO es
+  inyectable, solo selecciona la cuenta. El XSS real es **almacenado, en los comentarios del blog**.
+  Lección: identificar la superficie correcta antes de montar nada; confirmar con `<script>alert(1)</script>`.
+- **2. Exfiltración:** comentario con XSS que lee `document.cookie` y lo manda al exploit server; la
+  cookie de carlos queda en el **Access log**. Identifiqué la línea víctima por el user-agent
+  `Mozilla/5.0 (Victim)` (la otra era la mía, wiener).
+- **Concepto clave — `document.cookie` solo ve cookies SIN HttpOnly:** por eso robé `stay-logged-in`
+  (y `secret`) pero NO la `session` (HttpOnly, invisible a JS). Ahí está la defensa.
+- **3. Decodificación (dos capas):** el log lleva URL-encoding (`%3D`=`=`, `%3B`=`;`); dentro, el valor
+  de `stay-logged-in` es base64. Me lié cogiendo la cookie `secret` (basura) en vez de `stay-logged-in`.
+  Base64-decode del valor correcto → `carlos:26323c16d5f4dabff3bb136f2460a943`.
+- **4. Cracking offline con John the Ripper:**
+  - Modelo mental corregido: John/hashcat NO son el diccionario; son el **motor**. El diccionario
+    (`rockyou.txt`) es un archivo aparte. El motor hashea cada palabra y compara. = Mismo principio que
+    el Payload Processing de Burp, pero local y a millones/seg.
+  - `john --format=raw-md5 --wordlist=rockyou.txt hash.txt` → `--show` para ver el resultado.
+  - **Fallo diagnosticado:** primera pasada 0 cracked porque mi rockyou estaba truncado (59.186 líneas
+    vs ~14,3M del completo). Bajé el rockyou entero → crackeado en 2 seg.
+  - **Contraseña de carlos: `onceuponatime`** (MD5 `26323c16d5f4dabff3bb136f2460a943`).
+- **Concepto madre — "offline":** el hash se crackea en MI máquina, SIN tocar el servidor → sin rate
+  limit, sin lockout, sin 2FA que valga. Robado el hash, TODAS las defensas de login que rompí estas
+  semanas son inútiles. Por eso robar hashes es catastrófico.
+- **Defensa en .NET (por capas):**
+  - `HttpOnly` en toda cookie sensible → un XSS no puede robarla con `document.cookie`.
+  - NUNCA guardar un hash de contraseña en una cookie.
+  - Contraseñas en reposo con **bcrypt/Argon2 + sal**, jamás MD5 sin sal.
+  - Raíz de todo: prevenir el XSS (output encoding + CSP). Sin XSS, no hay robo de cookie.
+- **Herramientas nuevas al banco:** John the Ripper, CrackStation, exploit server + Access log.
