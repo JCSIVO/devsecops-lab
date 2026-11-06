@@ -863,3 +863,28 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   - Contraseñas en reposo con **bcrypt/Argon2 + sal**, jamás MD5 sin sal.
   - Raíz de todo: prevenir el XSS (output encoding + CSP). Sin XSS, no hay robo de cookie.
 - **Herramientas nuevas al banco:** John the Ripper, CrackStation, exploit server + Access log.
+
+### 2026-11-06 (viernes) — Authentication · Other mechanisms
+
+### Lab: Password reset broken logic ✅ (Apprentice)
+- **El bug es de lógica: el token de reset NO se valida.** El formulario de /forgot-password manda un
+  `temp-forgot-password-token` (en URL y en body) + `username` + nueva contraseña. El servidor NO
+  comprueba que el token exista, sea válido ni que pertenezca al usuario → se puede **vaciar el token**
+  y el reset sigue adelante.
+- **El ataque:**
+  1. Pedir reset de MI cuenta para ver la estructura de la petición (token + username en el body).
+  2. Vaciar `temp-forgot-password-token=` (en el `?...=` de la URL y en el body) y cambiar
+     `username=carlos`, con `new-password-1/2` a mi elección.
+  3. Enviar → la contraseña de carlos queda cambiada a `peter`. Login como carlos → lab resuelto.
+- **Patrón madre otra vez:** el servidor confía en datos que controla el cliente — el `username` dice a
+  quién resetear, y el token (que debería atar la operación a un usuario) ni se valida → "falla abierto"
+  cuando el token va vacío.
+- **Gotcha de entorno (1h perdida):** durante ~1h los correos de reset NO llegaban al email client.
+  Solución: limpiar caché y cookies del navegador → volvieron. No era el lab ni mi método, era estado
+  sucio del navegador. Apuntar como causa a descartar si un flujo de email se cuelga.
+- **Defensa en .NET:**
+  - El token de reset debe: existir, no haber caducado, ser de **un solo uso** y estar **atado al
+    usuario** en el servidor. Token vacío/ausente = rechazo, nunca "pasa".
+  - **Derivar el usuario objetivo DEL TOKEN**, no de un `username` que manda el cliente. El cliente no
+    debe poder decir a quién se le cambia la contraseña.
+  - Token aleatorio criptográficamente seguro, invalidado tras usarse o al cambiar la contraseña.
