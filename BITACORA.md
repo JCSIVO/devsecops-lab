@@ -1,13 +1,21 @@
-### Bitácora de Aprendizaje - DevSecOps Lab
+# Bitácora de Aprendizaje — DevSecOps Lab
 
-### 📍 Estado actual (actualizado: 2026-11-07)
+## 📍 Estado actual (actualizado: 2026-11-07)
 - **Módulo en curso:** Authentication ✅ COMPLETO (14/14) → siguiente: **JWT attacks**
 - **Último lab:** Password brute-force via staying logged in (07-11)
 - **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ▶️ · OAuth · XSS · CSRF · SSRF · XXE
 
-### 🗂️ Índice
-- [Authentication (oct–nov)](#) · [Access Control (oct)](#) · [SQL injection (sep–oct)](#)
+## 🗂️ Índice
+- [⚙️ Setup · Docker · pipeline DevSecOps](#mod-setup)  ·  *19 sep – 9 oct*
+- [💉 SQL injection](#mod-sqli)  ·  *10 – 18 oct*
+- [🔓 Access Control / IDOR](#mod-access-control)  ·  *19 – 24 oct*
+- [🔐 Authentication ✅](#mod-auth)  ·  *26 oct – 7 nov*
+  - [· Password-based login (7)](#auth-password-login)
+  - [· Multi-factor / 2FA (3)](#auth-mfa)
+  - [· Other mechanisms (4)](#auth-other)
 
+
+<a id="mod-setup"></a>
 
 ### 2026-09-19 (sábado) - · ~4 h
 
@@ -246,6 +254,8 @@
     Si hago commit, gitleaks debería pillarme a mí.
 - Mañana sábado: crear cuenta en PortSwigger Web Security Academy y hacer
   el bloque completo de SQL injection. Labs, no solo teoría.
+
+<a id="mod-sqli"></a>
 
 ###  2026-10-10 (sábado) — · ~3 h · primer día de PortSwigger / AppSec
 
@@ -538,6 +548,8 @@ Un WAF que filtra por lista de palabras clave **es esquivable** cambiando de cod
 - Second-order SQLi y "How to prevent SQL injection" (cierre del módulo).
 - Redo en frío del Oracle (conditional errors) — mié/jue.
 
+<a id="mod-access-control"></a>
+
 ### 2026-10-19 (lunes) — PortSwigger · Access Control (4 labs) — arranque del módulo
 
 **Tema:** Access control / Broken Access Control (OWASP A01). 4 labs resueltos, el último sin mirar solución.
@@ -640,6 +652,9 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 - **Redo en frío — Blind SQLi conditional errors (Oracle): resuelto solo.** Confirma que la técnica está aprendida (era el pendiente). Oráculo = status 500 (error) vs 200.
 - **Reincidencia a fichar:** las **comillas tipográficas** (`’ ‘`) volvieron a romper el payload → siempre comillas rectas `'`. (2ª vez.)
 - **Estado SQLi:** módulo completo **salvo los 2 de OAST** (necesitan Burp Collaborator / Pro → semana de trial).
+
+<a id="mod-auth"></a>
+<a id="auth-password-login"></a>
 
 ### 2026-10-26 (lunes) — Authentication
 
@@ -754,6 +769,8 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 - Hilo conductor de todo el bloque: **el servidor responde distinto según su estado interno**, y las
   defensas (lockout, rate limit) fallan cuando su LÓGICA es rompible, no su fuerza.
 
+<a id="auth-mfa"></a>
+
 ### 2026-11-01 (domingo) — Authentication · 2FA
 
 ### Lab: 2FA simple bypass ✅ (Apprentice)
@@ -811,6 +828,8 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 ### 🏁 Sub-bloque cerrado: Vulnerabilities in multi-factor authentication (3/3)
 - 2FA simple bypass · 2FA broken logic · 2FA bypass via brute-force. MFA completo.
 - Siguiente en la secuencia: **Vulnerabilities in other authentication mechanisms** (5 labs).
+
+<a id="auth-other"></a>
 
 ### 2026-11-04 (miércoles) — Authentication · Other mechanisms
 
