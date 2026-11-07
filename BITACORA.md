@@ -1,5 +1,14 @@
 ### Bitácora de Aprendizaje - DevSecOps Lab
 
+### 📍 Estado actual (actualizado: 2026-11-07)
+- **Módulo en curso:** Authentication ✅ COMPLETO (14/14) → siguiente: **JWT attacks**
+- **Último lab:** Password brute-force via staying logged in (07-11)
+- **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ▶️ · OAuth · XSS · CSRF · SSRF · XXE
+
+### 🗂️ Índice
+- [Authentication (oct–nov)](#) · [Access Control (oct)](#) · [SQL injection (sep–oct)](#)
+
+
 ### 2026-09-19 (sábado) - · ~4 h
 
 -  **Hice:** Instalado OrbStack + trivy/gitleaks/semgrep en el Mac. Levantado
