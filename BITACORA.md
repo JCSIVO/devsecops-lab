@@ -888,3 +888,58 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   - **Derivar el usuario objetivo DEL TOKEN**, no de un `username` que manda el cliente. El cliente no
     debe poder decir a quién se le cambia la contraseña.
   - Token aleatorio criptográficamente seguro, invalidado tras usarse o al cambiar la contraseña.
+ 
+### 2026-11-07 (sábado) — Authentication · Other mechanisms
+
+### Lab: Password reset poisoning via middleware ✅ (Practitioner)
+- **El bug:** el enlace del email de reset se construye con el host que viene en la cabecera
+  `X-Forwarded-Host`, que el atacante controla. El middleware confía en ella para montar la URL absoluta.
+- **Cadena de ataque (cada pieza ya vista esta semana):**
+  1. Pedir reset de carlos (`username=carlos`) + cabecera `X-Forwarded-Host: <mi exploit server>`.
+  2. El servidor genera el token REAL de carlos pero monta el enlace apuntando a MI dominio.
+  3. El bot carlos clica el enlace de su email (user-agent `(Victim)` en el log).
+  4. Su token válido cae en el **Access log** del exploit server.
+  5. Uso el token en la URL REAL del lab → nueva contraseña → login como carlos.
+- **NO es la técnica del lab anterior:** aquí el token SÍ se valida y está atado a su usuario; no se puede
+  vaciar ni reusar entre usuarios. El truco es hacer que el token legítimo de carlos ME llegue a mí.
+- **Error de mecánica (lo que me costó):** puse `X-Forwarded-Host: https://exploit-....net/exploit`
+  (URL completa) en vez del **host a secas**. El servidor construye `https:// + {host} + /ruta?token`,
+  así que me quedaba `https://https://.../exploit/forgot-password...` → enlace roto → nada llegaba al log.
+  Fix: `X-Forwarded-Host: exploit-xxxx.exploit-server.net` (solo el dominio, sin esquema ni ruta).
+  Lección: un Host es un dominio, NO una URL. Verificar el formato de un parámetro antes de asumirlo.
+- **Token capturado:** `agqw8i8eslauqrttl7eb0nhtcsqera50`.
+- **Familia conocida:** `X-Forwarded-Host` es hermana del `X-Forwarded-For` del lab de 2FA brute-force —
+  cabeceras que el atacante controla y el servidor se cree.
+- **Defensa en .NET:**
+  - NUNCA construir URLs absolutas (y menos en emails) a partir de `Host` / `X-Forwarded-Host`. El dominio
+    de los enlaces debe ser **configuración fija del servidor**, no venir en la petición.
+  - Validar / allowlist del header Host; ignorar `X-Forwarded-*` salvo detrás de un proxy propio de confianza.
+  - Token de reset: de un solo uso, caducidad corta, atado al usuario (eso aquí ya estaba bien).
+
+### Lab: Password brute-force via staying logged in ✅ (Practitioner)
+- **El oráculo = "New passwords do not match".** La función de cambio de contraseña pide current-password
+  + new-password-1 + new-password-2. Truco: pongo los dos "new" DISTINTOS a propósito y fuerza-bruteo el
+  current-password de carlos (Intruder, username=carlos):
+  - current incorrecto → "Current password is incorrect" (uniforme).
+  - current CORRECTO → pasa la validación → "New passwords do not match" (respuesta DISTINTA).
+  Como los new no coinciden, la contraseña NO se cambia: solo detecto cuál es la correcta.
+- **Detección:** ordenar por **longitud** → la fila que se desmarca con "New passwords do not match" lleva
+  el current-password correcto. → `carlos / 159753`.
+- **Por qué funciona (el fallo):** la función de cambio (a) revela con respuestas diferenciadas si el
+  current-password es correcto, y (b) NO tiene rate limiting/lockout → brute-force sin tope. El "staying
+  logged in" mantiene la sesión viva durante el ataque y la cuenta de carlos no se bloquea (no son logins).
+- **Falso error (1h, lección recurrente):** primeras pasadas = todo "bien", sin señal, porque la SESIÓN
+  había caducado. Estado muerto, no ausencia de vuln. Sesión fresca → apareció el oráculo. Misma familia
+  que el RTF, los emails por caché y los 500: ante respuesta uniforme/sin señal, sospechar del entorno.
+- **Credenciales:** `carlos / 159753`.
+- **Defensa en .NET:**
+  - Rate limiting / lockout en TODOS los endpoints que verifican contraseña, no solo el login (cambio de
+    contraseña incluido).
+  - Re-autenticación para acciones sensibles; contar intentos fallidos también aquí.
+  - Mensajes y tiempos consistentes: no filtrar si el current-password era válido.
+
+### 🏁🏁 MÓDULO COMPLETO: Authentication (14/14 labs)
+- Password-based login (7) + MFA (3) + Other mechanisms (4+1). Authentication cerrado al 100%.
+- Hilo conductor de todo el módulo: el servidor responde distinto según su estado interno, y las defensas
+  (lockout, 2FA, tokens, rate limit) caen cuando su LÓGICA es rompible o cuando se construye sobre datos
+  que controla el cliente. Y: robado un hash/token, las defensas de login dejan de importar.
