@@ -1,8 +1,8 @@
 # Bitácora de Aprendizaje — DevSecOps Lab
 
-## 📍 Estado actual (actualizado: 2026-11-07)
-- **Módulo en curso:** Authentication ✅ COMPLETO (14/14) → siguiente: **JWT attacks**
-- **Último lab:** Password brute-force via staying logged in (07-11)
+## 📍 Estado actual (actualizado: 2026-11-08)
+- **Módulo en curso:** JWT attacks ▶️ → siguiente: **OAuth 2.0**
+- **Último lab:** JWT authentication bypass via unverified signature (08-11)
 - **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ▶️ · OAuth · XSS · CSRF · SSRF · XXE
 
 ## 🗂️ Índice
@@ -13,6 +13,7 @@
   - [· Password-based login (7)](#auth-password-login)
   - [· Multi-factor / 2FA (3)](#auth-mfa)
   - [· Other mechanisms (4)](#auth-other)
+- [🪙 JWT attacks ▶️](#mod-jwt)  ·  *8 nov –*
 
 
 <a id="mod-setup"></a>
@@ -971,3 +972,39 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 - Hilo conductor de todo el módulo: el servidor responde distinto según su estado interno, y las defensas
   (lockout, 2FA, tokens, rate limit) caen cuando su LÓGICA es rompible o cuando se construye sobre datos
   que controla el cliente. Y: robado un hash/token, las defensas de login dejan de importar.
+
+<a id="mod-jwt"></a>
+
+### 2026-11-08 (domingo) — JWT attacks · arranque del módulo
+
+> Nuevo paradigma: **JWT (JSON Web Tokens)**. Prep de día libre (~2h): instalada la extensión
+> **JWT Editor** en Burp (BApp store) + teoría + primer lab.
+
+### Lab: JWT authentication bypass via unverified signature ✅ (Apprentice)
+- **El bug:** el servidor usa un JWT como sesión pero **NO verifica la firma**. Un JWT tiene 3 partes
+  (`header.payload.signature`); la firma es lo que garantiza que el payload no se ha alterado. Si no se
+  valida, puedo cambiar el payload a mi antojo y el server se lo cree.
+- **El ataque:**
+  1. Login como wiener → el token de sesión es un JWT.
+  2. Con **JWT Editor** cambio el claim **`sub`** de `wiener` a `administrator` (forjar identidad).
+  3. Envío la petición a `/admin` con el token manipulado → aparece el panel de admin.
+  4. Para borrar a carlos: en la MISMA petición (Repeater) cambio la ruta a
+     `GET /admin/delete?username=carlos` con el token forjado → carlos borrado → lab resuelto.
+- **Lo que más me costó (y la lección):** intenté entrar al panel haciendo clic en el menú "Admin Panel"
+  del navegador → "access denied" dos veces. El navegador manda mi cookie REAL (sin tocar), por eso me
+  deniega. El token forjado solo existe en MI petición de Repeater → **el ataque se hace desde la
+  petición, no desde la pantalla.** Operar a nivel de request, no de UI.
+- **Patrón madre, nuevo disfraz:** el servidor confía en un dato que controla el cliente (el payload del
+  JWT) sin verificar su integridad (la firma). EXACTAMENTE lo mismo que la cookie `Admin=true` de Access
+  Control o el `verify=carlos` del 2FA — ahora sobre un token que *parece* seguro por ir "firmado", pero
+  cuya firma nadie comprueba.
+- **Concepto JWT a fichar:** un JWT va **firmado, no cifrado** → el payload es legible por cualquiera
+  (base64). La seguridad NO está en que el contenido sea secreto, sino en que la FIRMA impide alterarlo…
+  si se valida.
+- **Defensa en .NET:**
+  - SIEMPRE validar la firma antes de confiar en NINGÚN claim: `TokenValidationParameters` con
+    `ValidateIssuerSigningKey = true`, clave de firma correcta y algoritmo fijado. Nunca "decodificar sin
+    verificar".
+  - No meter secretos en el payload (es legible). Los claims de identidad/rol (`sub`, `role`) solo se
+    creen DESPUÉS de validar la firma.
+- **Herramienta nueva:** JWT Editor (extensión de Burp) — decodificar, editar claims y re-firmar JWTs.
