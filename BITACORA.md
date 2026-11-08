@@ -2,7 +2,7 @@
 
 ## 📍 Estado actual (actualizado: 2026-11-08)
 - **Módulo en curso:** JWT attacks ▶️ → siguiente: **OAuth 2.0**
-- **Último lab:** JWT authentication bypass via unverified signature (08-11)
+- **Último lab:** JWT authentication bypass via flawed signature verification (08-11)
 - **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ▶️ · OAuth · XSS · CSRF · SSRF · XXE
 
 ## 🗂️ Índice
@@ -1008,3 +1008,28 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   - No meter secretos en el payload (es legible). Los claims de identidad/rol (`sub`, `role`) solo se
     creen DESPUÉS de validar la firma.
 - **Herramienta nueva:** JWT Editor (extensión de Burp) — decodificar, editar claims y re-firmar JWTs.
+
+### Lab: JWT authentication bypass via flawed signature verification ✅ (Apprentice)
+- **El bug — el ataque `alg: none`:** el servidor SÍ comprueba firmas… pero respeta el campo `alg` del
+  header del propio token. Poniendo `alg: none` le digo "este token no lleva firma, no la verifiques", y
+  se lo cree. Es peor que ayer: ayer directamente no verificaba; hoy verifica, pero deja que el ATACANTE
+  decida si hay que verificar.
+- **El ataque:**
+  1. Login como wiener → JWT de sesión.
+  2. En el header del token, cambio `alg` a **`none`** y **borro la firma** (queda `header.payload.`).
+  3. Cambio el claim `sub` a `administrator`.
+  4. Petición a `/admin` → aparece el panel de admin.
+  5. Modifico la petición a `GET /admin/delete?username=carlos` → carlos borrado → lab resuelto.
+- **Patrón madre, aún más claro:** el servidor confía en un dato que controla el cliente —el campo `alg`—
+  para decidir su PROPIA seguridad. El atacante controla el parámetro que dice "¿debo verificar?" → dice
+  "none" → no verifica.
+- **Concepto JWT a fichar:** `alg: none` es un algoritmo "legítimo" del estándar JWT (tokens sin firmar),
+  para contextos donde la integridad ya está garantizada por otra vía. En autenticación es veneno: jamás
+  debe aceptarse.
+- **Defensa en .NET:**
+  - **Allowlist explícita del algoritmo** esperado (p. ej. solo `RS256` o `HS256`) en
+    `TokenValidationParameters` (`ValidAlgorithms`). **Rechazar `none` siempre.**
+  - El servidor decide qué algoritmo es aceptable, NUNCA el header del token. No dejar que el token elija
+    cómo se valida a sí mismo.
+- **Continuidad:** mismos pasos de explotación que ayer (forjar `sub`, atacar desde la petición, no desde
+  la UI); lo nuevo es el vector de bypass de la firma (`none` en vez de "no se verifica").
