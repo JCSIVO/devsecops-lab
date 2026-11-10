@@ -2,7 +2,7 @@
 
 ## 📍 Estado actual (actualizado: 2026-11-08)
 - **Módulo en curso:** JWT attacks ▶️ → siguiente: **OAuth 2.0**
-- **Último lab:** JWT authentication bypass via flawed signature verification (08-11)
+- **Último lab:** JWT authentication bypass via jwk header injection (10-11)
 - **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ▶️ · OAuth · XSS · CSRF · SSRF · XXE
 
 ## 🗂️ Índice
@@ -1033,3 +1033,53 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
     cómo se valida a sí mismo.
 - **Continuidad:** mismos pasos de explotación que ayer (forjar `sub`, atacar desde la petición, no desde
   la UI); lo nuevo es el vector de bypass de la firma (`none` en vez de "no se verifica").
+
+### 2026-11-10 (martes) — JWT attacks
+
+### Lab: JWT authentication bypass via weak signing key ✅ (Practitioner)
+- **El bug:** el servidor firma el JWT con HS256 pero usa un **secreto débil** (estaba en un diccionario
+  conocido de secretos JWT). Aquí el server SÍ valida bien la firma → no vale `alg:none` ni ir sin firmar:
+  hay que **conocer la clave** y firmar un token válido.
+- **Crackeo offline del secreto (script propio en Python):**
+  - HS256 = HMAC-SHA256. Firma = `HMAC-SHA256(header_b64 + "." + payload_b64, SECRETO)`. Por cada palabra
+    del diccionario recalculo la firma y la comparo con la real; coincidencia = secreto.
+  - **Secreto encontrado: `secret1`.**
+  - Gotcha de código: faltaba `.digest()` → `hmac.new(...)` devuelve un OBJETO, no bytes; `.digest()` da
+    los bytes crudos que `base64.urlsafe_b64encode` necesita. (object vs bytes.)
+  - Gotcha conceptual: la firma JWT es **base64url SIN padding** (`-`/`_`, sin `=`), no base64 normal.
+- **El paso nuevo (que no tenían los labs 1 y 2) — RE-FIRMAR:** con el secreto, generé un JWT nuevo con
+  `sub: administrator` y lo **firmé con `secret1`** (clave simétrica en JWT Editor). El server lo verifica,
+  la firma es válida (porque ahora tengo la clave) → me acepta como admin.
+- **Ataque:** token forjado y firmado → `GET /admin/delete?username=carlos` → carlos borrado.
+- **Diferencia con los labs previos:** allí la verificación estaba rota; aquí FUNCIONA, el fallo es la
+  **clave débil**. Por eso hay que crackear y re-firmar, no solo manipular.
+- **Herramienta — construir, no usar:** mi propio cracker en Python (hmac + hashlib + base64), evitando la
+  fricción de hashcat en Mac. Diccionario pequeño → segundos. Mismo salto que en SQLi/2FA.
+- **Defensa en .NET:**
+  - Secreto HMAC **largo, aleatorio, alta entropía** (≥256 bits), nunca una palabra de diccionario; fuera
+    del código, en secret manager / Key Vault.
+  - Allowlist del algoritmo + validación de firma estricta (ya cubierto en labs previos).
+  - Mejor aún: firma **asimétrica** (RS256) → el server firma con clave privada; nadie forja aunque tenga
+    la pública.
+
+### Lab: JWT authentication bypass via jwk header injection ✅ (Practitioner)
+- **El bug:** el servidor usa firma asimétrica (RS256) pero confía en el parámetro **`jwk` del HEADER**
+  del propio token para obtener la clave pública con la que verifica. Si me deja meter MI clave pública
+  ahí, firmo con MI clave privada y el server valida contra la que yo le di → forjo lo que quiera.
+- **El ataque (JWT Editor):**
+  1. Genero un **par de claves RSA nuevo** (New RSA Key).
+  2. Cambio `sub` a `administrator` en el PAYLOAD.
+  3. **Attack → Embedded JWK:** incrusta mi clave PÚBLICA en el header `jwk` y **firma** el token con mi
+     clave PRIVADA.
+  4. El server lee el `jwk` del header, verifica la firma con esa clave pública, cuadra → me acepta.
+  5. `GET /admin/delete?username=carlos` → carlos borrado → lab resuelto.
+- **Patrón madre (como preví): confianza mal puesta en el header.** El servidor deja que el token le diga
+  CON QUÉ CLAVE verificarse. Todo el sentido de la firma asimétrica (solo la privada del server puede
+  firmar) se cae si el server acepta una clave que trae el atacante.
+- **Vocabulario a fichar:** no se "cifra", se **FIRMA** (el JWT va firmado, no cifrado). El `jwk` va en el
+  **HEADER**, el `sub` en el **PAYLOAD**. Firmo con mi privada; el server verifica con mi pública (la del jwk).
+- **Defensa en .NET:**
+  - NUNCA verificar con material de clave que viene en el token (`jwk`, `jku`, `kid`). El servidor usa
+    SOLO su propio juego de claves pre-configurado y de confianza.
+  - Ignorar / descartar el header `jwk`; el token no decide con qué clave se valida.
+- **Herramienta:** JWT Editor → New RSA Key + Attack "Embedded JWK".
