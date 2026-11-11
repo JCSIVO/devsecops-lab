@@ -1,8 +1,8 @@
 # Bitácora de Aprendizaje — DevSecOps Lab
 
-## 📍 Estado actual (actualizado: 2026-11-08)
+## 📍 Estado actual (actualizado: 2026-11-11)
 - **Módulo en curso:** JWT attacks ▶️ → siguiente: **OAuth 2.0**
-- **Último lab:** JWT authentication bypass via jwk header injection (10-11)
+- **Último lab:** JWT authentication bypass via jku header injection (11-11)
 - **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ▶️ · OAuth · XSS · CSRF · SSRF · XXE
 
 ## 🗂️ Índice
@@ -1083,3 +1083,32 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
     SOLO su propio juego de claves pre-configurado y de confianza.
   - Ignorar / descartar el header `jwk`; el token no decide con qué clave se valida.
 - **Herramienta:** JWT Editor → New RSA Key + Attack "Embedded JWK".
+
+### 2026-11-11 (miércoles) — JWT attacks
+
+### Lab: JWT authentication bypass via jku header injection ✅ (Practitioner)
+- **El bug:** el servidor confía en el header **`jku`** (JWK Set URL) para ir a BUSCAR la clave pública con
+  la que verifica — sin comprobar que la URL sea de confianza. Hospedo mi propio JWKS, apunto el `jku` ahí,
+  firmo con mi privada → el server descarga MI clave y valida contra ella.
+- **El ataque:**
+  1. New RSA Key en JWT Editor; copio la pública como JWK.
+  2. En el exploit server (`/jwks.json`) hospedo un **JWK Set**: `{"keys":[ <mi JWK pública> ]}`.
+  3. En el token: header `jku` → URL de mi jwks.json; payload `sub` → administrator.
+  4. **Firmo con mi privada** (al final) → `GET /admin/delete?username=carlos` → carlos borrado.
+- **Lo que me costó (3 gotchas):**
+  1. **No era una JWK suelta, sino un JWK SET.** Al principio hospedé la clave sola `{"kty":...,"n":...}`;
+     el server la descargaba (200 en el log) pero no la encontraba, porque busca dentro de un array `keys`.
+     Fix: envolver en `{"keys":[ ... ]}`.
+  2. **El `kid` debe coincidir en los dos sitios:** header del token = JWK hospedada. El server usa el kid
+     para elegir la clave del Set.
+  3. **Orden:** editar jku/sub/kid PRIMERO y **firmar al final**; si firmas antes y luego editas, la firma
+     deja de cuadrar.
+- **Señal de que iba bien:** en el Access log del exploit vi al propio server del lab (`User-Agent:
+  Java/21.0.1`) descargando mi `/jwks.json` con 200 → el `jku` funcionaba; el fallo estaba en la estructura
+  del fichero, no en el jku.
+- **Patrón madre, versión "fetch remoto":** como el `jwk` (el server confía en una clave que trae el
+  atacante) pero PEOR — ya no incrusto la clave, le doy una **URL que yo controlo** y el server hace una
+  petición de red a mi máquina para traerla.
+- **Defensa en .NET:** NUNCA resolver la clave de verificación desde una URL/parámetro del token (`jku`,
+  `jwk`, `kid`). Usar SOLO un JWKS de confianza pre-configurado (allowlist de emisor/URL). El token no
+  decide de dónde sale la clave.
