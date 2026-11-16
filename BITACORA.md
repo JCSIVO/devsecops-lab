@@ -1,8 +1,8 @@
 # Bitácora de Aprendizaje — DevSecOps Lab
 
-## 📍 Estado actual (actualizado: 2026-11-11)
+## 📍 Estado actual (actualizado: 2026-11-16)
 - **Módulo en curso:** JWT attacks ▶️ → siguiente: **OAuth 2.0**
-- **Último lab:** JWT authentication bypass via jku header injection (11-11)
+- **Último lab:** JWT authentication bypass via algorithm confusion (16-11)
 - **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ▶️ · OAuth · XSS · CSRF · SSRF · XXE
 
 ## 🗂️ Índice
@@ -1112,3 +1112,47 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 - **Defensa en .NET:** NUNCA resolver la clave de verificación desde una URL/parámetro del token (`jku`,
   `jwk`, `kid`). Usar SOLO un JWKS de confianza pre-configurado (allowlist de emisor/URL). El token no
   decide de dónde sale la clave.
+
+### 2026-11-13 a 11-15 · PAUSA (motivos personales)
+  - Sin sesiones de JWT por motivos personales. Pausa, no ruptura de cadena: anunciada y retomada el 16.
+
+### 2026-11-16 (lunes) — JWT attacks
+
+### Lab: JWT authentication bypass via kid header path traversal ✅ (Practitioner)
+- **El bug:** el header **`kid`** le dice al server QUÉ fichero de clave cargar. Si no sanea, puedo hacer
+  **path traversal** y apuntarlo a un fichero cuyo contenido yo prediga.
+- **El ataque:**
+  1. `kid` → `../../../../../../../dev/null`. `/dev/null` existe siempre en Linux y devuelve **vacío**,
+     así que la "clave" que lee el server es una cadena vacía.
+  2. En JWT Editor: **New Symmetric Key** con `k` = cadena vacía (la clave vacía que casa con /dev/null).
+  3. `sub` → administrator; firmo con esa clave vacía (HS256) → el server lee /dev/null (vacío), usa
+     cadena vacía como clave HMAC, mi firma cuadra → acceso admin → borro a carlos.
+- **Lo que me costó (lección madre, otra vez):** hice solo **3 saltos** `../` y no llegaba; la solución
+  llevaba **7**. No sabes la profundidad del directorio de trabajo del server, así que **hay que pasarse
+  de saltos**: los `../` de más, ya en la raíz `/`, son inofensivos. Mismo principio que el umbral del
+  account lock (asumí 3, era 4): **ante un valor que no controlas, margen holgado, no el mínimo que creo.**
+- **Patrón madre:** el server confía en el `kid` (dato del cliente) para localizar la clave de
+  verificación → traversal + fichero predecible (/dev/null) → forjo.
+- **Defensa en .NET:** el `kid` es una CLAVE DE BÚSQUEDA opaca en un keystore fijo, NUNCA una ruta de
+  fichero. Allowlist de kids válidos; sanear contra path traversal; no permitir verificación simétrica con
+  claves predecibles por el atacante.
+
+### Lab: JWT authentication bypass via algorithm confusion ✅ (Expert)
+- **El bug — algorithm confusion:** el server firma/verifica con **RS256** (asimétrico: privada firma,
+  pública verifica). Pero el código elige el algoritmo según el `alg` del token y reutiliza el mismo
+  material de clave. Si pongo `alg: HS256`, el server hace **HMAC-SHA256 usando su clave PÚBLICA como
+  secreto** — y la pública es pública, así que yo también puedo calcular esa firma. La garantía asimétrica
+  se cae porque la pública pasa a ser un secreto compartido.
+- **El ataque:**
+  1. Conseguir la clave pública del server: expuesta en el JWKS (`/jwks.json`).
+  2. En JWT Editor: New RSA Key con esa JWK → importa la pública.
+  3. **Attack → "HMAC Key Confusion"** (automatiza: PEM → base64 → clave simétrica con ese k).
+  4. `alg` → HS256, `sub` → administrator; firmar con esa clave simétrica.
+  5. `GET /admin/delete?username=carlos` → a la primera → carlos borrado.
+- **Herramienta:** JWT Editor trae el ataque "HMAC Key Confusion" integrado → hace el PEM→base64→k por mí.
+  (Manual también vale: Copy Public Key as PEM → Decoder base64 → k de una symmetric key.)
+- **Patrón madre:** confianza en el `alg` del token (como `alg:none`) + reutilización del material de
+  clave para dos algoritmos. El token no debe decidir CÓMO se valida.
+- **Defensa en .NET:** fijar el algoritmo esperado (allowlist, p. ej. SOLO RS256) en
+  `TokenValidationParameters.ValidAlgorithms`; rechazar HS256 cuando se espera RS256; NUNCA reutilizar el
+  material de clave entre simétrico y asimétrico. La pública es para verificar RSA, jamás un secreto HMAC.
