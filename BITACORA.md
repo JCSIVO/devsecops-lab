@@ -1,9 +1,9 @@
 # Bitácora de Aprendizaje — DevSecOps Lab
 
-## 📍 Estado actual (actualizado: 2026-11-16)
-- **Módulo en curso:** JWT attacks ▶️ → siguiente: **OAuth 2.0**
-- **Último lab:** JWT authentication bypass via algorithm confusion (16-11)
-- **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ▶️ · OAuth · XSS · CSRF · SSRF · XXE
+## 📍 Estado actual (actualizado: 2026-11-17)
+- **Módulo en curso:** JWT ✅ COMPLETO (8/8) → siguiente: **OAuth 2.0**
+- **Último lab:** JWT authentication bypass via algorithm confusion with no exposed key (17-11)
+- **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ✅ · OAuth ▶️ · XSS · CSRF · SSRF · XXE
 
 ## 🗂️ Índice
 - [⚙️ Setup · Docker · pipeline DevSecOps](#mod-setup)  ·  *19 sep – 9 oct*
@@ -13,7 +13,7 @@
   - [· Password-based login (7)](#auth-password-login)
   - [· Multi-factor / 2FA (3)](#auth-mfa)
   - [· Other mechanisms (4)](#auth-other)
-- [🪙 JWT attacks ▶️](#mod-jwt)  ·  *8 nov –*
+- [🪙 JWT attacks ✅](#mod-jwt)  ·  *8 – 17 nov*
 
 
 <a id="mod-setup"></a>
@@ -1156,3 +1156,33 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
 - **Defensa en .NET:** fijar el algoritmo esperado (allowlist, p. ej. SOLO RS256) en
   `TokenValidationParameters.ValidAlgorithms`; rechazar HS256 cuando se espera RS256; NUNCA reutilizar el
   material de clave entre simétrico y asimétrico. La pública es para verificar RSA, jamás un secreto HMAC.
+
+### 2026-11-17 (martes) — JWT attacks · cierre del módulo
+
+### Lab: JWT authentication bypass via algorithm confusion with no exposed key ✅ (Expert)
+- **Igual que el algorithm confusion de ayer, pero la clave pública NO está expuesta** → hay que DERIVARLA
+  antes de atacar.
+- **Derivar la pública (lo nuevo):** con dos JWT distintos firmados por el server se despejan los posibles
+  valores del módulo `n` (técnica criptográfica). Herramienta `sig2n` vía Docker:
+  `docker run --rm -it portswigger/sig2n "<token1>" "<token2>"` → candidatos de clave pública en base64
+  (X.509 y PKCS1) + JWT de prueba.
+- **El ataque (= ayer):** meto el **base64 X.509** como `k` de una clave simétrica en JWT Editor → `alg`
+  HS256, `sub` administrator → firmo → `/admin/delete?username=carlos`. Se prueban los candidatos; solo el
+  `n` correcto funciona.
+- **El gotcha (lección madre, y esta la cacé YO SOLO):** las primeras keys daban errores raros que no
+  cuadraban con el ataque → la **sesión del lab había caducado**. Estado muerto, no fallo del método.
+  Repetí con tokens frescos → nuevas keys → la primera X.509 resolvió a la primera. *Ante errores que no
+  encajan, sospechar del entorno/estado antes que del método.*
+- **Tooling:** Docker (OrbStack) no necesita mi contenedor; `docker run <imagen>` crea el contenedor al
+  vuelo y descarga la imagen solo.
+- **Defensa en .NET:** misma que el algorithm confusion — allowlist del algoritmo (SOLO RS256), rechazar
+  HS256, no reutilizar material de clave. Que la pública no esté expuesta NO es defensa (se deriva de dos
+  firmas); la defensa real es fijar el algoritmo.
+
+### 🏁🏁 MÓDULO COMPLETO: JWT attacks (8/8 labs)
+- Bypass de firma (unverified · alg:none · weak key crackeado) + inyección de claves (jwk · jku · kid
+  traversal) + algorithm confusion (con y sin clave expuesta).
+- Hilo conductor: el server confía en lo que el TOKEN dice sobre sí mismo — su firma, su algoritmo (`alg`),
+  de dónde sale su clave (`jwk`/`jku`/`kid`). La seguridad JWT depende de NO delegar esas decisiones en el
+  token. Patrón madre en versión cripto.
+- Herramientas al banco: JWT Editor, cracker HMAC propio en Python, sig2n (Docker).
