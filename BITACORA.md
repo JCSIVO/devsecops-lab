@@ -1,8 +1,8 @@
 # Bitácora de Aprendizaje — DevSecOps Lab
 
-## 📍 Estado actual (actualizado: 2026-11-17)
-- **Módulo en curso:** JWT ✅ COMPLETO (8/8) → siguiente: **OAuth 2.0**
-- **Último lab:** JWT authentication bypass via algorithm confusion with no exposed key (17-11)
+## 📍 Estado actual (actualizado: 2026-11-18)
+- **Módulo en curso:** OAuth 2.0 ▶️ → siguiente: **XSS**
+- **Último lab:** Authentication bypass via OAuth implicit flow (18-11)
 - **Progreso Fase 1:** SQLi ✅ · Access Control ✅ · Authentication ✅ · JWT ✅ · OAuth ▶️ · XSS · CSRF · SSRF · XXE
 
 ## 🗂️ Índice
@@ -14,6 +14,7 @@
   - [· Multi-factor / 2FA (3)](#auth-mfa)
   - [· Other mechanisms (4)](#auth-other)
 - [🪙 JWT attacks ✅](#mod-jwt)  ·  *8 – 17 nov*
+- [🔑 OAuth 2.0 ▶️](#mod-oauth)  ·  *18 nov –*
 
 
 <a id="mod-setup"></a>
@@ -1186,3 +1187,26 @@ Completados los labs de SQLi que la plataforma no tenía marcados (WHERE/hidden 
   de dónde sale su clave (`jwk`/`jku`/`kid`). La seguridad JWT depende de NO delegar esas decisiones en el
   token. Patrón madre en versión cripto.
 - Herramientas al banco: JWT Editor, cracker HMAC propio en Python, sig2n (Docker).
+
+<a id="mod-oauth"></a>
+
+### 2026-11-18 (miércoles) — OAuth 2.0 · arranque del módulo
+
+### Lab: Authentication bypass via OAuth implicit flow ✅ (Practitioner)
+- **El bug:** en el implicit flow, tras el login social la app cliente hace un POST a su `/authenticate`
+  con `email` + `username` + `token`. La app **confía en el email/username de ese POST** en vez de derivar
+  la identidad DEL token validado. Cambiando esos campos me logueo como otro.
+- **El ataque:**
+  1. Login con wiener/peter por OAuth; observo todas las peticiones.
+  2. Encuentro el POST a `/authenticate` con email + username + token.
+  3. Sustituyo email y username por los de **carlos** (dejo el token tal cual — a la app le da igual que
+     no corresponda).
+  4. La app crea una **sesión de carlos** → uso esa cookie → entro como carlos → lab resuelto.
+- **Patrón madre, en OAuth:** el cliente confía en un dato que controla el usuario (el email del POST) para
+  decidir QUIÉN eres, en vez de en el token verificado. La identidad DEBE salir del token.
+- **Concepto OAuth a fichar:** el **implicit flow** entrega el token directo al navegador y es propenso a
+  esto; está **desaconsejado**. Lo moderno es **authorization code flow + PKCE**.
+- **Defensa (cliente .NET):**
+  - NUNCA fiarse de email/username enviados por el cliente en el paso de login. Derivar la identidad del
+    **access token validado** (userinfo del proveedor con el token, o validar el id_token).
+  - No usar implicit flow → authorization code + PKCE.
